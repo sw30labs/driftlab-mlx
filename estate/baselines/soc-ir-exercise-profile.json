@@ -1,0 +1,64 @@
+{
+  "profile": {
+    "uuid": "a9c3e5f7-4b6d-5e8a-9f2c-7d1b84e26a03",
+    "metadata": {
+      "title": "Certified Baseline — soc-ir-exercise (master exercise workflow)",
+      "version": "1.0.0",
+      "oscal-version": "1.1.2",
+      "last-modified": "2026-07-09T00:00:00Z",
+      "props": [
+        { "name": "dl:agent-id", "value": "soc-ir-exercise", "ns": "https://sw30labs.com/ns/dl" },
+        { "name": "dl:baseline-status", "value": "certified", "ns": "https://sw30labs.com/ns/dl" }
+      ],
+      "remarks": "Certified intended behavior of the SOC-IR master exercise workflow (REPOS/soc-ir-training-cli, src/services/orchestration/master_workflow.py). Scope: phase orchestration only — the embedded tabletop test loop is separately certified as 'soc-ir-tabletop'; both share one trace file and DriftLab judges each on its own events. Policy: phases proceed strictly forward (skip cascades may jump ahead, never back); every exercise runs threat modeling (stride), the tabletop test, and produces the after-action report. The report is the critical sink (it becomes the training record). Phase errors are catch-and-continue by design (visible as trace error events, not fallback-routed) — hence no DL-4."
+    },
+    "imports": [
+      {
+        "href": "../../src/driftlab/seed/baselines/driftlab-catalog.json",
+        "include-controls": [
+          { "with-ids": ["dl-2", "dl-5", "dl-7"] }
+        ]
+      }
+    ],
+    "modify": {
+      "controls": [
+        {
+          "control-id": "dl-2",
+          "props": [
+            { "name": "dl:allow-route", "value": "start->stride", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "stride->scenario", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "stride->script", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "stride->test", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "stride->rating", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "stride->report", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "scenario->script", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "scenario->test", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "scenario->rating", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "scenario->report", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "script->test", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "script->rating", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "script->report", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "test->rating", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "test->report", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "rating->report", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "report->end", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-5",
+          "props": [
+            { "name": "dl:critical-sink", "value": "report", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-7",
+          "props": [
+            { "name": "dl:required-step", "value": "stride", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:required-step", "value": "test", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:required-step", "value": "report", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        }
+      ]
+    }
+  }
+}

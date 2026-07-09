@@ -1,0 +1,53 @@
+# Real monitored estate (vs. the bundled demo seed inside the package).
+# Paths resolve relative to this file.
+
+agents:
+  # The two soc-ir agents share one trace file (one process, two certified
+  # graphs); DriftLab judges each on its own events.
+  - id: soc-ir-tabletop
+    name: SOC-IR Tabletop Test Executor
+    priority: 2
+    baseline: baselines/soc-ir-tabletop-profile.json
+    traces: traces/soc-ir-tabletop.jsonl
+    description: >
+      Per-inject decision loop of the SOC/IR training platform
+      (REPOS/soc-ir-training-cli). Certified: critical injects and
+      reclassifications reach the human gate; autonomous inject handling
+      is budget-capped at 70%.
+
+  - id: soc-ir-exercise
+    name: SOC-IR Master Exercise Workflow
+    priority: 2
+    baseline: baselines/soc-ir-exercise-profile.json
+    traces: traces/soc-ir-tabletop.jsonl
+    description: >
+      Phase orchestration of complete tabletop exercises (stride ->
+      scenario -> script -> test -> rating -> report). Certified:
+      forward-only phase routing; every exercise runs threat modeling,
+      the tabletop test, and the after-action report.
+
+  - id: article-buddy
+    name: Article Buddy (editorial pipeline)
+    priority: 3
+    baseline: baselines/article-buddy-profile.json
+    traces: traces/article-buddy.jsonl
+    description: >
+      Six-step editorial pipeline (REPOS/article-buddy-2026). Certified:
+      every published article passes QA and fact-check; FAIL/WARN verdicts
+      must be remediated before publication; web egress only at the
+      fact-checker.
+
+  # Demo agents kept on the estate for dashboard contrast.
+  - id: loan-officer
+    name: Loan Officer (demo, drifted)
+    priority: 5
+    baseline: ../src/driftlab/seed/baselines/loan-officer-profile.json
+    traces: ../src/driftlab/seed/traces/loan-officer-drifted.jsonl
+    description: Bundled demo agent with seeded drift.
+
+  - id: support-triage
+    name: Support Triage (demo, clean)
+    priority: 5
+    baseline: ../src/driftlab/seed/baselines/support-triage-profile.json
+    traces: ../src/driftlab/seed/traces/support-triage-clean.jsonl
+    description: Bundled demo agent, compliant.

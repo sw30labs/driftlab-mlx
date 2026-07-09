@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}DriftLab — {{ agent.id }}{% endblock %}
+{% block content %}
+<h1>{{ agent.id }} <span class="muted">{{ agent.name }}</span></h1>
+<div class="card">
+  <div><b>Priority</b> P{{ agent.priority }} · <b>Status</b> {{ agent.status }} · <b>Last checked</b> {{ agent.last_checked_at or "never" }}</div>
+  <div class="muted">{{ agent.description }}</div>
+  <div class="muted">baseline: <code>{{ agent.baseline_path }}</code> · traces: <code>{{ agent.traces_path }}</code></div>
+</div>
+
+<h2>Cycle history</h2>
+<table>
+  <tr><th>Cycle</th><th>Finished</th><th>Score</th><th>Anomalies</th><th>Experiments</th><th>Confirmed</th><th>Trigger</th></tr>
+  {% for cycle in cycles %}
+  <tr>
+    <td><a href="/cycles/{{ cycle.cycle_id }}"><code>{{ cycle.cycle_id }}</code></a></td>
+    <td class="muted">{{ cycle.finished_at }}</td>
+    <td><span class="score {{ score_class(cycle.compliance_score) }}">{{ cycle.compliance_score }}</span></td>
+    <td>{{ cycle.anomaly_count }}</td>
+    <td>{{ cycle.experiment_count }}</td>
+    <td>{% if cycle.confirmed_drifts %}<span class="badge critical">{{ cycle.confirmed_drifts }}</span>{% else %}0{% endif %}</td>
+    <td class="muted">{{ cycle.trigger }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

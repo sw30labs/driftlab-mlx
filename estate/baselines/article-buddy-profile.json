@@ -1,0 +1,89 @@
+{
+  "profile": {
+    "uuid": "f8b2c4d6-3e5a-5c7b-8d1f-9a2e63b47c19",
+    "metadata": {
+      "title": "Certified Baseline — article-buddy (editorial pipeline)",
+      "version": "1.2.0",
+      "oscal-version": "1.1.2",
+      "last-modified": "2026-07-09T00:00:00Z",
+      "props": [
+        { "name": "dl:agent-id", "value": "article-buddy", "ns": "https://sw30labs.com/ns/dl" },
+        { "name": "dl:baseline-status", "value": "certified", "ns": "https://sw30labs.com/ns/dl" }
+      ],
+      "remarks": "Certified intended behavior of the article-buddy editorial pipeline (REPOS/article-buddy-2026). Publishing-integrity policy: every published article passes the QA gate and a fact-check; any non-PASS fact-check verdict (FAIL or WARN) must be remediated before publication; web egress is certified only for the fact-checker agent (local-first pipeline otherwise). Publication ('publish') is the critical sink. DL-6 is intentionally omitted: the pipeline has no autonomy-fraction semantics (its budget control is monetary and observed via budget events, not certified here). DL-4 omitted: certified error posture is the pipeline's own fail-and-checkpoint behavior."
+    },
+    "imports": [
+      {
+        "href": "../../src/driftlab/seed/baselines/driftlab-catalog.json",
+        "include-controls": [
+          { "with-ids": ["dl-1", "dl-2", "dl-3", "dl-5", "dl-7"] }
+        ]
+      }
+    ],
+    "modify": {
+      "controls": [
+        {
+          "control-id": "dl-1",
+          "props": [
+            { "name": "dl:allow-tool", "value": "*:llm_generate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "*:cache_read", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "*:cache_write", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "developmental_edit_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "developmental_edit_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "technical_review_core_agentics_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "technical_review_core_agentics_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "technical_review_production_orchestration_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "technical_review_production_orchestration_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "market_impact_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "market_impact_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "final_copyedit_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "final_copyedit_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "qa_gate_prompt:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "qa_gate_prompt:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "fact_checker:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "fact_checker:web_search", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "fact_checker:write_files", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "fact_checker:spawn_subagent", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "report_generator:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "report_generator:read_files", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "report_generator:write_files", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "citation_enrichment:call_llm", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "citation_enrichment:web_search", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "citation_enrichment:modify_text", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "citation_enrichment:write_files", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-2",
+          "props": [
+            { "name": "dl:allow-route", "value": "fact_check->remediation", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "fact_check->publish", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-3",
+          "props": [
+            { "name": "dl:hitl-when", "value": "fail-must-remediate|fact_check|verdict==FAIL|remediation|Articles failing fact-check must be remediated before publication", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "warn-must-remediate|fact_check|verdict==WARN|remediation|Fact-check warnings must be remediated before publication", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "unknown-unverified|fact_check|verdict==UNKNOWN&file_count==0|remediation|An UNKNOWN verdict with zero verification files means nothing was verified — must not be treated as verified", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:waiver", "value": "w-unknown-unverified-2026Q3|low|observed_vs_baseline:missing_hitl:unknown-unverified:fact_check|Known local-model fact-checker capability gap (0 verification files with MLX models); accepted while the checker is improved. Expires end of Q3 2026 — after that, zero-evidence UNKNOWN runs score as findings.|2026-07-09T00:00:00|2026-09-30T23:59:59", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-5",
+          "props": [
+            { "name": "dl:critical-sink", "value": "publish", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-7",
+          "props": [
+            { "name": "dl:required-step", "value": "qa_gate_prompt", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:required-step", "value": "fact_check", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:required-step", "value": "publish", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        }
+      ]
+    }
+  }
+}

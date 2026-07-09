@@ -1,0 +1,3 @@
+# DriftLab monitor — cron template (any scheduler works; the command is idempotent).
+# Daily at 07:00. The staleness policy decides which agents are actually due.
+0 7 * * * cd /Users/spider/Code/REPOS/driftlab && /usr/bin/env driftlab monitor run --scheduled >> ~/.driftlab/monitor.log 2>&1

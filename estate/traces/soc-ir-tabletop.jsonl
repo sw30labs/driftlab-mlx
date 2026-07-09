@@ -1,0 +1,131 @@
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c1", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c1", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c1", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c1", "seq": 3, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-2", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c1", "seq": 4}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c1", "seq": 5, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c1", "seq": 6, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c1", "seq": 7, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c1", "seq": 8, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c1", "seq": 9, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c1", "seq": 10, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c1", "seq": 11, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-4", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c1", "seq": 12}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c1", "seq": 13, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "c1", "seq": 14, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c1", "seq": 15, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c1", "seq": 16, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c1", "seq": 17}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c2", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c2", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c2", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c2", "seq": 3, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c2", "seq": 4, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c2", "seq": 5, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c2", "seq": 6, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c2", "seq": 7, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c2", "seq": 8, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c2", "seq": 9, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 3}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c2", "seq": 10}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c3", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c3", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c3", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c3", "seq": 3, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-2", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c3", "seq": 4}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c3", "seq": 5, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c3", "seq": 6, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c3", "seq": 7, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c3", "seq": 8, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c3", "seq": 9, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c3", "seq": 10, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "true", "selection_status": "NONE", "trigger": "reclassification"}, "event_type": "route", "node": "select_and_ask", "run_id": "c3", "seq": 11, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-4", "scored": "true", "trigger": "reclassification"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c3", "seq": 12}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c3", "seq": 13, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "c3", "seq": 14, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c3", "seq": 15, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c3", "seq": 16, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c3", "seq": 17}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c4", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c4", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c4", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c4", "seq": 3, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-2", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c4", "seq": 4}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c4", "seq": 5, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c4", "seq": 6, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 1, "facilitator_action": "NONE", "inject_id": "INJ-2", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c4", "seq": 7}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c4", "seq": 8, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c4", "seq": 9, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c4", "seq": 10, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c4", "seq": 11, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c4", "seq": 12, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c4", "seq": 13, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c4", "seq": 14, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-4", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c4", "seq": 15}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c4", "seq": 16, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "c4", "seq": 17, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c4", "seq": 18, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c4", "seq": 19, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c4", "seq": 20}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c5", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c5", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c5", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c5", "seq": 3, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c5", "seq": 4, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c5", "seq": 5, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c5", "seq": 6, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c5", "seq": 7, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c5", "seq": 8, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c5", "seq": 9, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 3}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c5", "seq": 10}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c6", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "c6", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c6", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c6", "seq": 3, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-2", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c6", "seq": 4}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c6", "seq": 5, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "c6", "seq": 6, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c6", "seq": 7, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "c6", "seq": 8, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "c6", "seq": 9, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c6", "seq": 10, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "human", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "false", "selection_status": "NONE", "trigger": "critical"}, "event_type": "route", "node": "select_and_ask", "run_id": "c6", "seq": 11, "target": "hitl_gate"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"clarification_round": 0, "facilitator_action": "NONE", "inject_id": "INJ-4", "scored": "true", "trigger": "critical"}, "event_type": "hitl", "node": "hitl_gate", "run_id": "c6", "seq": 12}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "hitl_gate", "run_id": "c6", "seq": 13, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "c6", "seq": 14, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "c6", "seq": 15, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "c6", "seq": 16, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "c6", "seq": 17}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d1", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "d1", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d1", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d1", "seq": 3, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "d1", "seq": 4, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d1", "seq": 5, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d1", "seq": 6, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "d1", "seq": 7, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d1", "seq": 8, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d1", "seq": 9, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "d1", "seq": 10, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d1", "seq": 11, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "d1", "seq": 12, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "d1", "seq": 13}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "low", "inject_id": "INJ-1", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d2", "seq": 0, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-1"}, "event_type": "tool_call", "node": "respond", "run_id": "d2", "seq": 1, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d2", "seq": 2, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "high", "inject_id": "INJ-2", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d2", "seq": 3, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-2"}, "event_type": "tool_call", "node": "respond", "run_id": "d2", "seq": 4, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d2", "seq": 5, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "medium", "inject_id": "INJ-3", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d2", "seq": 6, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-3"}, "event_type": "tool_call", "node": "respond", "run_id": "d2", "seq": 7, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d2", "seq": 8, "target": "select_and_ask"}
+{"agent_id": "soc-ir-tabletop", "autonomy": "auto", "decision_context": {"difficulty": "high", "inject_id": "INJ-4", "reclassified": "false", "selection_status": "NONE", "trigger": "none"}, "event_type": "route", "node": "select_and_ask", "run_id": "d2", "seq": 9, "target": "respond"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"inject_id": "INJ-4"}, "event_type": "tool_call", "node": "respond", "run_id": "d2", "seq": 10, "tool": "cyber_agent"}
+{"agent_id": "soc-ir-tabletop", "event_type": "route", "node": "respond", "run_id": "d2", "seq": 11, "target": "qa_review_node"}
+{"agent_id": "soc-ir-tabletop", "event_type": "tool_call", "node": "qa_review_node", "run_id": "d2", "seq": 12, "tool": "qa_agent"}
+{"agent_id": "soc-ir-tabletop", "decision_context": {"injects_tested": 4}, "event_type": "output_commit", "node": "qa_review_node", "run_id": "d2", "seq": 13}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "stride", "run_id": "e7a52d4a9205", "seq": 0, "target": "scenario"}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "scenario", "run_id": "e7a52d4a9205", "seq": 1, "target": "script"}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "script", "run_id": "e7a52d4a9205", "seq": 2, "target": "test"}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "test", "run_id": "e7a52d4a9205", "seq": 3, "target": "rating"}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "rating", "run_id": "e7a52d4a9205", "seq": 4, "target": "report"}
+{"agent_id": "soc-ir-exercise", "decision_context": {"skipped": "none"}, "event_type": "route", "node": "report", "run_id": "e7a52d4a9205", "seq": 5, "target": "end"}

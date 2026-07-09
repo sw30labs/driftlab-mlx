@@ -1,0 +1,45 @@
+{"agent_id": "article-buddy", "decision_context": {"resume": "false", "total_steps": 6}, "event_type": "node_enter", "node": "pipeline_start", "run_id": "ab-20260709T145104Z-001", "seq": 0}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "node_enter", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 1}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "tool_call", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 2, "tool": "llm_generate"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 3, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 4, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 5, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "developmental_edit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 6, "tool": "cache_write"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_core_agentics_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 7, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_production_orchestration_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 8, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_core_agentics_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 9, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_production_orchestration_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 10, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_core_agentics_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 11, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_production_orchestration_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 12, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_core_agentics_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 13, "tool": "cache_write"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "technical_review_production_orchestration_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 14, "tool": "cache_write"}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "node_enter", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 15}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "tool_call", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 16, "tool": "llm_generate"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 17, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 18, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 19, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "market_impact_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 20, "tool": "cache_write"}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "node_enter", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 21}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "tool_call", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 22, "tool": "llm_generate"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 23, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 24, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 25, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "final_copyedit_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 26, "tool": "cache_write"}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "node_enter", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 27}
+{"agent_id": "article-buddy", "decision_context": {"model": "Hy3-MLX-Q9"}, "event_type": "tool_call", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 28, "tool": "llm_generate"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 29, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 30, "tool": "modify_text"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 31, "tool": "cache_read"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "qa_gate_prompt", "run_id": "ab-20260709T145104Z-001", "seq": 32, "tool": "cache_write"}
+{"agent_id": "article-buddy", "decision_context": {"total_steps": 6}, "event_type": "output_commit", "node": "pipeline_end", "run_id": "ab-20260709T145104Z-001", "seq": 33}
+{"agent_id": "article-buddy", "event_type": "node_enter", "node": "fact_check", "run_id": "ab-20260709T145104Z-001", "seq": 34}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "fact_checker", "run_id": "ab-20260709T145104Z-001", "seq": 35, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "fact_checker", "run_id": "ab-20260709T145104Z-001", "seq": 36, "tool": "web_search"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "fact_checker", "run_id": "ab-20260709T145104Z-001", "seq": 37, "tool": "write_files"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "fact_checker", "run_id": "ab-20260709T145104Z-001", "seq": 38, "tool": "spawn_subagent"}
+{"agent_id": "article-buddy", "autonomy": "auto", "decision_context": {"verdict": "UNKNOWN"}, "event_type": "route", "node": "fact_check", "run_id": "ab-20260709T145104Z-001", "seq": 39, "target": "publish"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "report_generator", "run_id": "ab-20260709T145104Z-001", "seq": 40, "tool": "call_llm"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "report_generator", "run_id": "ab-20260709T145104Z-001", "seq": 41, "tool": "read_files"}
+{"agent_id": "article-buddy", "event_type": "tool_call", "node": "report_generator", "run_id": "ab-20260709T145104Z-001", "seq": 42, "tool": "write_files"}
+{"agent_id": "article-buddy", "event_type": "node_enter", "node": "publish", "run_id": "ab-20260709T145104Z-001", "seq": 43}
+{"agent_id": "article-buddy", "event_type": "output_commit", "node": "publish", "run_id": "ab-20260709T145104Z-001", "seq": 44}

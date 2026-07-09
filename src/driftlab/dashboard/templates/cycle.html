@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}DriftLab — cycle {{ cycle.cycle_id }}{% endblock %}
+{% block content %}
+<h1>Cycle <code>{{ cycle.cycle_id }}</code> <span class="muted">{{ cycle.agent_id }}</span></h1>
+<div class="card">
+  <span class="score {{ score_class(cycle.compliance_score) }}">{{ cycle.compliance_score }} / 100</span>
+  &nbsp; {% for sev, n in counts.items() %}<span class="badge {{ sev }}">{{ n }} {{ sev }}</span> {% endfor %}
+  <div class="muted">
+    baseline <code>{{ cycle.baseline_hash[:12] }}</code> · trace <code>{{ cycle.trace_hash[:12] }}</code> ·
+    {{ cycle.runs_observed }} runs / {{ cycle.events_observed }} events ·
+    {{ cycle.started_at }} → {{ cycle.finished_at }} · trigger {{ cycle.trigger }}
+  </div>
+  <div>
+    {% for name in artifacts %}
+      <a href="/cycles/{{ cycle.cycle_id }}/artifacts/{{ name }}">{{ name }}</a>{% if not loop.last %} · {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<h2>Anomalies</h2>
+{% if anomalies %}
+<table>
+  <tr><th>Severity</th><th>Control</th><th>Finding</th><th>Waiver</th><th>Fingerprint</th></tr>
+  {% for a in anomalies %}
+  <tr>
+    <td><span class="badge {{ a.severity }}">{{ a.severity }}</span></td>
+    <td>{{ (a.control_id or "—").upper() }}</td>
+    <td><b>{{ a.title }}</b><div class="muted">{{ a.description }}</div></td>
+    <td>{% if a.waiver_status == "waived" %}<span class="badge waived">waived</span>{% else %}—{% endif %}</td>
+    <td><code>{{ a.fingerprint }}</code></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="card">No behavioral drift observed — all certified controls satisfied. <span class="badge ok">clean</span></div>
+{% endif %}
+
+<h2>Micro-experiments</h2>
+{% if experiments %}
+<table>
+  <tr><th>Verdict</th><th>Hypothesis</th><th>Validity</th><th>Probes</th></tr>
+  {% for e in experiments %}
+  <tr>
+    <td><span class="badge {{ e.row.verdict }}">{{ e.row.verdict }}</span></td>
+    <td>{{ e.record.get("hypothesis", {}).get("statement", e.row.anomaly_fingerprint) }}
+        <div class="muted"><code>{{ e.row.anomaly_fingerprint }}</code></div></td>
+    <td>{{ e.row.validity_score }}</td>
+    <td>
+      {% for p in e.record.get("probes", []) %}
+        <div class="muted">{{ p.get("violations") }}/{{ p.get("samples") }} violations (rate {{ p.get("violation_rate") }})</div>
+      {% endfor %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<div class="muted">No experiments this cycle.</div>
+{% endif %}
+{% endblock %}

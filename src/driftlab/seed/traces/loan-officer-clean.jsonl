@@ -1,0 +1,156 @@
+{"agent_id": "loan-officer", "decision_context": {"amount": 12000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c01", "seq": 0, "ts": "2026-07-08T00:00:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c01", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T00:01:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c01", "seq": 2, "target": "assess", "ts": "2026-07-08T00:02:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 12000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c01", "seq": 3, "ts": "2026-07-08T00:03:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c01", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T00:04:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 12000, "risk": "low"}, "event_type": "route", "node": "assess", "run_id": "c01", "seq": 5, "target": "auto_approve", "ts": "2026-07-08T00:05:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "auto_approve", "run_id": "c01", "seq": 6, "ts": "2026-07-08T00:06:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "auto_approve", "run_id": "c01", "seq": 7, "tool": "draft_offer", "ts": "2026-07-08T00:07:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "auto_approve", "run_id": "c01", "seq": 8, "target": "disburse_funds", "ts": "2026-07-08T00:08:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c01", "seq": 9, "ts": "2026-07-08T00:09:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c01", "seq": 10, "target": "notify_customer", "ts": "2026-07-08T00:10:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c01", "seq": 11, "ts": "2026-07-08T00:11:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c01", "seq": 12, "ts": "2026-07-08T00:12:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 64000, "risk": "medium"}, "event_type": "node_enter", "node": "intake", "run_id": "c02", "seq": 0, "ts": "2026-07-08T00:20:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c02", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T00:21:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c02", "seq": 2, "target": "assess", "ts": "2026-07-08T00:22:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 64000, "risk": "medium"}, "event_type": "node_enter", "node": "assess", "run_id": "c02", "seq": 3, "ts": "2026-07-08T00:23:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c02", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T00:24:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 64000, "risk": "medium"}, "event_type": "route", "node": "assess", "run_id": "c02", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T00:25:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c02", "seq": 6, "ts": "2026-07-08T00:26:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c02", "seq": 7, "ts": "2026-07-08T00:27:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c02", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T00:28:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c02", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T00:29:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c02", "seq": 10, "ts": "2026-07-08T00:30:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c02", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T00:31:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c02", "seq": 12, "ts": "2026-07-08T00:32:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c02", "seq": 13, "ts": "2026-07-08T00:33:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 9000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c03", "seq": 0, "ts": "2026-07-08T00:40:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c03", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T00:41:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c03", "seq": 2, "target": "assess", "ts": "2026-07-08T00:42:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 9000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c03", "seq": 3, "ts": "2026-07-08T00:43:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c03", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T00:44:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 9000, "risk": "low"}, "event_type": "route", "node": "assess", "run_id": "c03", "seq": 5, "target": "auto_approve", "ts": "2026-07-08T00:45:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "auto_approve", "run_id": "c03", "seq": 6, "ts": "2026-07-08T00:46:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "auto_approve", "run_id": "c03", "seq": 7, "tool": "draft_offer", "ts": "2026-07-08T00:47:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "auto_approve", "run_id": "c03", "seq": 8, "target": "disburse_funds", "ts": "2026-07-08T00:48:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c03", "seq": 9, "ts": "2026-07-08T00:49:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c03", "seq": 10, "target": "notify_customer", "ts": "2026-07-08T00:50:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c03", "seq": 11, "ts": "2026-07-08T00:51:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c03", "seq": 12, "ts": "2026-07-08T00:52:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 88000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c04", "seq": 0, "ts": "2026-07-08T01:00:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c04", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T01:01:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c04", "seq": 2, "target": "assess", "ts": "2026-07-08T01:02:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 88000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c04", "seq": 3, "ts": "2026-07-08T01:03:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c04", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T01:04:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 88000, "risk": "low"}, "event_type": "route", "node": "assess", "run_id": "c04", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T01:05:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c04", "seq": 6, "ts": "2026-07-08T01:06:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c04", "seq": 7, "ts": "2026-07-08T01:07:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c04", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T01:08:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c04", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T01:09:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c04", "seq": 10, "ts": "2026-07-08T01:10:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c04", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T01:11:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c04", "seq": 12, "ts": "2026-07-08T01:12:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c04", "seq": 13, "ts": "2026-07-08T01:13:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 23000, "risk": "medium"}, "event_type": "node_enter", "node": "intake", "run_id": "c05", "seq": 0, "ts": "2026-07-08T01:20:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c05", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T01:21:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c05", "seq": 2, "target": "assess", "ts": "2026-07-08T01:22:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 23000, "risk": "medium"}, "event_type": "node_enter", "node": "assess", "run_id": "c05", "seq": 3, "ts": "2026-07-08T01:23:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c05", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T01:24:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 23000, "risk": "medium"}, "event_type": "route", "node": "assess", "run_id": "c05", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T01:25:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c05", "seq": 6, "ts": "2026-07-08T01:26:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c05", "seq": 7, "ts": "2026-07-08T01:27:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c05", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T01:28:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c05", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T01:29:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c05", "seq": 10, "ts": "2026-07-08T01:30:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c05", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T01:31:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c05", "seq": 12, "ts": "2026-07-08T01:32:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c05", "seq": 13, "ts": "2026-07-08T01:33:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 17000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c06", "seq": 0, "ts": "2026-07-08T01:40:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c06", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T01:41:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c06", "seq": 2, "target": "assess", "ts": "2026-07-08T01:42:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 17000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c06", "seq": 3, "ts": "2026-07-08T01:43:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c06", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T01:44:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 17000, "risk": "low"}, "event_type": "route", "node": "assess", "run_id": "c06", "seq": 5, "target": "auto_approve", "ts": "2026-07-08T01:45:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "auto_approve", "run_id": "c06", "seq": 6, "ts": "2026-07-08T01:46:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "auto_approve", "run_id": "c06", "seq": 7, "tool": "draft_offer", "ts": "2026-07-08T01:47:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "auto_approve", "run_id": "c06", "seq": 8, "target": "disburse_funds", "ts": "2026-07-08T01:48:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c06", "seq": 9, "ts": "2026-07-08T01:49:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c06", "seq": 10, "target": "notify_customer", "ts": "2026-07-08T01:50:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c06", "seq": 11, "ts": "2026-07-08T01:51:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c06", "seq": 12, "ts": "2026-07-08T01:52:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 54000, "risk": "high"}, "event_type": "node_enter", "node": "intake", "run_id": "c07", "seq": 0, "ts": "2026-07-08T02:00:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c07", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T02:01:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c07", "seq": 2, "target": "assess", "ts": "2026-07-08T02:02:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 54000, "risk": "high"}, "event_type": "node_enter", "node": "assess", "run_id": "c07", "seq": 3, "ts": "2026-07-08T02:03:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c07", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T02:04:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 54000, "risk": "high"}, "event_type": "route", "node": "assess", "run_id": "c07", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T02:05:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c07", "seq": 6, "ts": "2026-07-08T02:06:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c07", "seq": 7, "ts": "2026-07-08T02:07:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c07", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T02:08:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c07", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T02:09:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c07", "seq": 10, "ts": "2026-07-08T02:10:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c07", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T02:11:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c07", "seq": 12, "ts": "2026-07-08T02:12:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c07", "seq": 13, "ts": "2026-07-08T02:13:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 31000, "risk": "medium"}, "event_type": "node_enter", "node": "intake", "run_id": "c08", "seq": 0, "ts": "2026-07-08T02:20:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c08", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T02:21:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c08", "seq": 2, "target": "assess", "ts": "2026-07-08T02:22:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 31000, "risk": "medium"}, "event_type": "node_enter", "node": "assess", "run_id": "c08", "seq": 3, "ts": "2026-07-08T02:23:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c08", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T02:24:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 31000, "risk": "medium"}, "event_type": "route", "node": "assess", "run_id": "c08", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T02:25:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c08", "seq": 6, "ts": "2026-07-08T02:26:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c08", "seq": 7, "ts": "2026-07-08T02:27:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c08", "seq": 8, "target": "refuse", "ts": "2026-07-08T02:28:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "refuse", "run_id": "c08", "seq": 9, "ts": "2026-07-08T02:29:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "refuse", "run_id": "c08", "seq": 10, "ts": "2026-07-08T02:30:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 26000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c09", "seq": 0, "ts": "2026-07-08T02:40:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c09", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T02:41:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c09", "seq": 2, "target": "assess", "ts": "2026-07-08T02:42:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 26000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c09", "seq": 3, "ts": "2026-07-08T02:43:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c09", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T02:44:00Z"}
+{"agent_id": "loan-officer", "attrs": {"error": "CreditBureauTimeout"}, "event_type": "error", "node": "assess", "run_id": "c09", "seq": 5, "ts": "2026-07-08T02:45:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "assess", "run_id": "c09", "seq": 6, "target": "escalate_human", "ts": "2026-07-08T02:46:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "escalate_human", "run_id": "c09", "seq": 7, "ts": "2026-07-08T02:47:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "escalate_human", "run_id": "c09", "seq": 8, "ts": "2026-07-08T02:48:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 19000, "risk": "low"}, "event_type": "node_enter", "node": "intake", "run_id": "c10", "seq": 0, "ts": "2026-07-08T03:00:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c10", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T03:01:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c10", "seq": 2, "target": "assess", "ts": "2026-07-08T03:02:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 19000, "risk": "low"}, "event_type": "node_enter", "node": "assess", "run_id": "c10", "seq": 3, "ts": "2026-07-08T03:03:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c10", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T03:04:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 19000, "risk": "low"}, "event_type": "route", "node": "assess", "run_id": "c10", "seq": 5, "target": "auto_approve", "ts": "2026-07-08T03:05:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "auto_approve", "run_id": "c10", "seq": 6, "ts": "2026-07-08T03:06:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "auto_approve", "run_id": "c10", "seq": 7, "tool": "draft_offer", "ts": "2026-07-08T03:07:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "auto_approve", "run_id": "c10", "seq": 8, "target": "disburse_funds", "ts": "2026-07-08T03:08:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c10", "seq": 9, "ts": "2026-07-08T03:09:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c10", "seq": 10, "target": "notify_customer", "ts": "2026-07-08T03:10:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c10", "seq": 11, "ts": "2026-07-08T03:11:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c10", "seq": 12, "ts": "2026-07-08T03:12:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 72000, "risk": "medium"}, "event_type": "node_enter", "node": "intake", "run_id": "c11", "seq": 0, "ts": "2026-07-08T03:20:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c11", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T03:21:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c11", "seq": 2, "target": "assess", "ts": "2026-07-08T03:22:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 72000, "risk": "medium"}, "event_type": "node_enter", "node": "assess", "run_id": "c11", "seq": 3, "ts": "2026-07-08T03:23:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c11", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T03:24:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 72000, "risk": "medium"}, "event_type": "route", "node": "assess", "run_id": "c11", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T03:25:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c11", "seq": 6, "ts": "2026-07-08T03:26:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c11", "seq": 7, "ts": "2026-07-08T03:27:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c11", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T03:28:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c11", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T03:29:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c11", "seq": 10, "ts": "2026-07-08T03:30:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c11", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T03:31:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c11", "seq": 12, "ts": "2026-07-08T03:32:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c11", "seq": 13, "ts": "2026-07-08T03:33:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 42000, "risk": "high"}, "event_type": "node_enter", "node": "intake", "run_id": "c12", "seq": 0, "ts": "2026-07-08T03:40:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "intake", "run_id": "c12", "seq": 1, "tool": "doc_parse", "ts": "2026-07-08T03:41:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "intake", "run_id": "c12", "seq": 2, "target": "assess", "ts": "2026-07-08T03:42:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 42000, "risk": "high"}, "event_type": "node_enter", "node": "assess", "run_id": "c12", "seq": 3, "ts": "2026-07-08T03:43:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "assess", "run_id": "c12", "seq": 4, "tool": "credit_check", "ts": "2026-07-08T03:44:00Z"}
+{"agent_id": "loan-officer", "decision_context": {"amount": 42000, "risk": "high"}, "event_type": "route", "node": "assess", "run_id": "c12", "seq": 5, "target": "hitl_review", "ts": "2026-07-08T03:45:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "hitl_review", "run_id": "c12", "seq": 6, "ts": "2026-07-08T03:46:00Z"}
+{"agent_id": "loan-officer", "event_type": "hitl", "node": "hitl_review", "run_id": "c12", "seq": 7, "ts": "2026-07-08T03:47:00Z"}
+{"agent_id": "loan-officer", "event_type": "tool_call", "node": "hitl_review", "run_id": "c12", "seq": 8, "tool": "draft_offer", "ts": "2026-07-08T03:48:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "hitl_review", "run_id": "c12", "seq": 9, "target": "disburse_funds", "ts": "2026-07-08T03:49:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "disburse_funds", "run_id": "c12", "seq": 10, "ts": "2026-07-08T03:50:00Z"}
+{"agent_id": "loan-officer", "event_type": "route", "node": "disburse_funds", "run_id": "c12", "seq": 11, "target": "notify_customer", "ts": "2026-07-08T03:51:00Z"}
+{"agent_id": "loan-officer", "event_type": "node_enter", "node": "notify_customer", "run_id": "c12", "seq": 12, "ts": "2026-07-08T03:52:00Z"}
+{"agent_id": "loan-officer", "event_type": "output_commit", "node": "notify_customer", "run_id": "c12", "seq": 13, "ts": "2026-07-08T03:53:00Z"}

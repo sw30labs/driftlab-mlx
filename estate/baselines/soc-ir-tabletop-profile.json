@@ -1,0 +1,73 @@
+{
+  "profile": {
+    "uuid": "e2f4a8c6-1d3b-5a7e-9c2f-4b8d61a35e07",
+    "metadata": {
+      "title": "Certified Baseline — soc-ir-tabletop (tabletop test-execution agent)",
+      "version": "1.0.0",
+      "oscal-version": "1.1.2",
+      "last-modified": "2026-07-09T00:00:00Z",
+      "props": [
+        { "name": "dl:agent-id", "value": "soc-ir-tabletop", "ns": "https://sw30labs.com/ns/dl" },
+        { "name": "dl:baseline-status", "value": "certified", "ns": "https://sw30labs.com/ns/dl" }
+      ],
+      "remarks": "Certified intended behavior of the SOC-IR tabletop test-execution graph (REPOS/soc-ir-training-cli, src/services/tabletop/test_graph.py). Scope: the per-inject decision loop (select_and_ask -> hitl_gate/respond -> qa_review_node). Training-integrity policy: critical (high-difficulty) injects, playbook coverage gaps/overlaps, weak selections, and incident reclassifications must reach the human gate; at most 70% of inject decisions may be handled fully autonomously. DL-4 is intentionally not parameterized: the certified error posture of this agent is catch-record-continue (partial success), which is attested via DL-7 required steps rather than a fallback route. No DL-5 critical sinks: the graph takes no irreversible external action (training simulator)."
+    },
+    "imports": [
+      {
+        "href": "../../src/driftlab/seed/baselines/driftlab-catalog.json",
+        "include-controls": [
+          { "with-ids": ["dl-1", "dl-2", "dl-3", "dl-6", "dl-7"] }
+        ]
+      }
+    ],
+    "modify": {
+      "set-parameters": [
+        { "param-id": "dl-max-auto-fraction", "values": ["0.70"] }
+      ],
+      "controls": [
+        {
+          "control-id": "dl-1",
+          "props": [
+            { "name": "dl:allow-tool", "value": "select_and_ask:playbook_selection", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "respond:cyber_agent", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "qa_review_node:qa_agent", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-2",
+          "props": [
+            { "name": "dl:allow-route", "value": "select_and_ask->hitl_gate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "select_and_ask->respond", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "hitl_gate->respond", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "hitl_gate->hitl_gate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "respond->select_and_ask", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "respond->qa_review_node", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-3",
+          "props": [
+            { "name": "dl:hitl-when", "value": "critical-inject|select_and_ask|difficulty==high|hitl_gate|High-difficulty injects are critical decision points and must reach the human gate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "reclassification-pivot|select_and_ask|reclassified==true|hitl_gate|Incident reclassifications must be reviewed by the operator", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "selection-gap|select_and_ask|selection_status==GAP|hitl_gate|Playbook coverage gaps must reach the human gate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "selection-overlap|select_and_ask|selection_status==OVERLAP|hitl_gate|Ambiguous playbook overlaps must reach the human gate", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:hitl-when", "value": "low-confidence|select_and_ask|selection_status==WEAK|hitl_gate|Weak playbook fits must reach the human gate", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-6",
+          "props": [
+            { "name": "dl:auto-target", "value": "respond", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:decision-node", "value": "select_and_ask", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-7",
+          "props": [
+            { "name": "dl:required-step", "value": "qa_review_node", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        }
+      ]
+    }
+  }
+}

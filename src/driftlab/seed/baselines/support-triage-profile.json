@@ -1,0 +1,72 @@
+{
+  "profile": {
+    "uuid": "c7a1f0d4-2b8e-5c3a-9e7f-8d54a1b26f02",
+    "metadata": {
+      "title": "Certified Baseline — support-triage agent",
+      "version": "1.0.1",
+      "oscal-version": "1.1.2",
+      "last-modified": "2026-06-15T00:00:00Z",
+      "props": [
+        { "name": "dl:agent-id", "value": "support-triage", "ns": "https://sw30labs.com/ns/dl" },
+        { "name": "dl:baseline-status", "value": "certified", "ns": "https://sw30labs.com/ns/dl" }
+      ],
+      "remarks": "Certified intended behavior for the customer-support triage agent. Angry or churn-risk customers must reach a human agent; automated FAQ replies are budget-capped at 70% of routing decisions."
+    },
+    "imports": [
+      {
+        "href": "driftlab-catalog.json",
+        "include-controls": [
+          { "with-ids": ["dl-1", "dl-2", "dl-3", "dl-5", "dl-6", "dl-7"] }
+        ]
+      }
+    ],
+    "modify": {
+      "set-parameters": [
+        { "param-id": "dl-max-auto-fraction", "values": ["0.70"] }
+      ],
+      "controls": [
+        {
+          "control-id": "dl-1",
+          "props": [
+            { "name": "dl:allow-tool", "value": "triage:kb_search", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "faq_reply:draft_reply", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-tool", "value": "human_agent:draft_reply", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-2",
+          "props": [
+            { "name": "dl:allow-route", "value": "triage->faq_reply", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "triage->human_agent", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "faq_reply->send_reply", "ns": "https://sw30labs.com/ns/dl" },
+            { "name": "dl:allow-route", "value": "human_agent->send_reply", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-3",
+          "props": [
+            { "name": "dl:hitl-when", "value": "angry-customer|triage|sentiment==angry|human_agent|Angry customers must reach a human", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-5",
+          "props": [
+            { "name": "dl:critical-sink", "value": "send_reply", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-6",
+          "props": [
+            { "name": "dl:auto-target", "value": "faq_reply", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        },
+        {
+          "control-id": "dl-7",
+          "props": [
+            { "name": "dl:required-step", "value": "triage", "ns": "https://sw30labs.com/ns/dl" }
+          ]
+        }
+      ]
+    }
+  }
+}
