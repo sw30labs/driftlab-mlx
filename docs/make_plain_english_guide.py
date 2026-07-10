@@ -138,10 +138,10 @@ story += [
     para("The whole cycle, step by step:", "h2"),
 ]
 flow = [
-    ("1", "Record", "The agent keeps a diary. Every decision — which tool it used, where it sent a case, whether it asked a human — is written down as one line in a log file. Nothing leaves your machine."),
+    ("1", "Record", "The agent keeps a diary. Every decision — which tool it used, where it sent a case, whether it asked a human — is written down as one line in a locally stored log file."),
     ("2", "Compare", "On a schedule, DriftLab reads the diary and compares it, rule by rule, against the certified rulebook. This step is pure arithmetic — no AI judgment involved. The same diary and the same rulebook always give exactly the same answer."),
     ("3", "Double-check", "For every suspected violation, DriftLab forms a precise claim (“high-value cases are skipping human review”) and re-tests it against a replay of the recordings. Only claims that reproduce are labelled CONFIRMED."),
-    ("4", "Report", "Each check produces a compliance score (0–100), a findings list with the evidence attached, and standard audit documents. A dashboard shows the whole fleet at a glance; an optional email digest arrives only when something actually needs attention."),
+    ("4", "Report", "Each check produces a compliance score (0–100), a findings list with the evidence attached, and structured evidence artifacts. A dashboard shows the whole fleet at a glance; an optional email digest arrives only when something actually needs attention."),
 ]
 story.append(tbl(
     [[cell("", bold=True), cell("STEP", bold=True), cell("WHAT HAPPENS", bold=True)]] +
@@ -176,10 +176,11 @@ story += [
     Spacer(1, 4),
     para(
         "Technically, the rulebook is stored in <b>OSCAL</b> — a machine-readable compliance format "
-        "published by NIST (the US standards institute). That matters for one reason: the reports "
-        "DriftLab produces are in the same standard format, so they slot directly into audit "
-        "processes for SOC 2, ISO/IEC 42001 and the EU AI Act instead of being yet another "
-        "proprietary export.", "body",
+        "published by NIST (the US standards institute). DriftLab v0.1 produces OSCAL 1.1.2-shaped "
+        "evidence artifacts, with one documented assessment-plan deviation while per-agent system "
+        "security plans are still on the roadmap. Treat them as structured inputs to SOC 2, "
+        "ISO/IEC 42001 and EU AI Act evidence workflows, not yet as proof of strict OSCAL "
+        "conformance.", "body",
     ),
 ]
 
@@ -231,12 +232,12 @@ story += [
 # ---------------------------------------------------------------- 5
 story += [
     para("5. How to run it", "h1"),
-    para("You need a Mac or Linux machine with Python 3.11 or newer and the <b>uv</b> tool. Everything runs locally; no account, no cloud, no data leaves the machine.", "body"),
+    para("You need a Mac or Linux machine with Python 3.11 or newer and the <b>uv</b> tool. The core runs locally with no account or cloud service required. If you enable the optional OMLX analyst, trace-derived context is sent only to the operator-controlled OMLX endpoint you configure.", "body"),
     para("First contact (five minutes)", "h2"),
-    para("cd /Users/spider/Code/REPOS/driftlab<br/>uv sync --all-extras&nbsp;&nbsp;&nbsp;&nbsp;# installs everything into a local environment<br/>uv run driftlab demo&nbsp;&nbsp;&nbsp;&nbsp;# runs the built-in demonstration above<br/>uv run driftlab dashboard&nbsp;&nbsp;# then open http://127.0.0.1:8321 in a browser", "code"),
+    para("git clone https://github.com/sw30labs/driftlab.git<br/>cd driftlab<br/>uv sync --all-extras&nbsp;&nbsp;&nbsp;&nbsp;# installs everything into a local environment<br/>uv run driftlab demo&nbsp;&nbsp;&nbsp;&nbsp;# runs the built-in demonstration above<br/>uv run driftlab dashboard&nbsp;&nbsp;# then open http://127.0.0.1:8321 in a browser", "code"),
     para(
         "The dashboard shows every monitored agent with its score, its findings, its double-check "
-        "verdicts, and download links for the audit documents. Green means compliant; red means look "
+        "verdicts, and download links for the evidence artifacts. Green means compliant; red means look "
         "now."
     ),
     para("Watching your own agent (three steps)", "h2"),
@@ -263,8 +264,9 @@ story += [
         "Four files per agent per check, saved locally: <b>report.md</b> — the human-readable "
         "summary; <b>ledger.json</b> — the findings with evidence, written so that re-running the "
         "same check produces a byte-for-byte identical file (an auditor can verify it themselves); "
-        "and <b>assessment-plan.json / assessment-results.json</b> — the standard OSCAL audit "
-        "documents, including positive attestations for every rule that was checked and held."
+        "and <b>assessment-plan.json / assessment-results.json</b> — OSCAL 1.1.2-shaped evidence "
+        "artifacts, including positive attestations for every rule that was checked and held. v0.1 "
+        "documents one non-strict assessment-plan reference until per-agent SSP output lands."
     ),
 ]
 
@@ -279,11 +281,13 @@ story += [
         "disabled."
     ),
     para(
-        "<b>It never sends your data anywhere.</b> Diaries, rulebooks, findings, and reports all stay "
-        "on your machine. Even the dashboard works with no internet connection."
+        "<b>The core path needs no external service.</b> Diaries, rulebooks, findings, and reports stay "
+        "on operator-controlled systems, and the dashboard works with no internet connection. If the "
+        "optional OMLX analyst is enabled, trace-derived context goes only to the operator-configured "
+        "OMLX endpoint — not to a third-party OpenAI service."
     ),
     para(
-        "<b>AI never decides a finding.</b> DriftLab can optionally use a local language model to add "
+        "<b>AI never decides a finding.</b> DriftLab can optionally use an operator-controlled OMLX model to add "
         "readable summaries to reports — prose only. Every finding, severity, score, and verdict "
         "comes from the deterministic comparison and the replayed evidence. Unplug the language "
         "model and every number stays identical (this is tested, not promised)."
@@ -333,7 +337,7 @@ glossary = [
     ("Sandbox / replay", "The isolated, in-memory copy of the recordings that experiments run against — never the live system."),
     ("Deterministic", "Same inputs, same outputs, every single time. No randomness, no AI judgment. The property that makes results auditable."),
     ("Compliance score", "0–100 summary per check: starts at 100, loses points per finding, weighted by severity."),
-    ("OSCAL", "The NIST-published machine-readable format for compliance documents; what auditors' tooling can ingest directly."),
+    ("OSCAL", "The NIST-published machine-readable format for compliance documents. DriftLab v0.1 follows its structures but is not yet strictly schema-validated."),
     ("Waiver", "A formally accepted, time-boxed exception to a finding — visible on every report until it expires."),
 ]
 story.append(tbl([[cell(a, bold=True), cell(b)] for a, b in glossary], [44 * mm, 116 * mm], header=False, fontsize=9.5))

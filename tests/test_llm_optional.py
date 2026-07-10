@@ -1,10 +1,12 @@
 """LLM layer: none-by-default, mocked-model behavior, budget guard, and the
 advisory-only invariant for the DeepAgents pass (project-pulse mock style)."""
 
-from types import SimpleNamespace
+import sys
+from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import ValidationError
 
 from driftlab.config import Settings
 from driftlab.llm import TokenBudgetExceeded, TokenUsage, build_chat_model, invoke_with_retries, narrate
@@ -12,11 +14,42 @@ from driftlab.llm import TokenBudgetExceeded, TokenUsage, build_chat_model, invo
 
 def test_provider_none_builds_nothing():
     assert build_chat_model(Settings(llm_provider="none")) is None
-    assert build_chat_model(Settings(llm_provider="")) is None
 
 
-def test_openai_without_model_degrades():
-    assert build_chat_model(Settings(llm_provider="openai", llm_model="")) is None
+def test_settings_reject_remote_openai_provider():
+    with pytest.raises(ValidationError, match="llm_provider"):
+        Settings(llm_provider="openai")
+
+
+def test_omlx_uses_chat_openai_only_as_compatible_client():
+    chat_openai = MagicMock(return_value=object())
+    module = ModuleType("langchain_openai")
+    module.ChatOpenAI = chat_openai
+    settings = Settings(
+        llm_provider="omlx",
+        llm_model="local-model",
+        omlx_base_url="http://omlx.internal:8000/v1",
+    )
+
+    with patch.dict(sys.modules, {"langchain_openai": module}):
+        model = build_chat_model(settings)
+
+    assert model is chat_openai.return_value
+    chat_openai.assert_called_once_with(
+        model="local-model",
+        base_url="http://omlx.internal:8000/v1",
+        api_key="test",
+        timeout=600.0,
+        streaming=False,
+        temperature=0.2,
+    )
+
+
+def test_bypassed_settings_cannot_enable_remote_openai_provider():
+    """The builder stays OMLX-only even if pydantic validation is bypassed."""
+    settings = Settings.model_construct(llm_provider="openai")
+    with patch.dict(sys.modules, {"langchain_openai": None}):
+        assert build_chat_model(settings) is None
 
 
 def _fake_model(content="hello", fail_times=0):
@@ -98,9 +131,7 @@ def test_deep_annotate_uses_mocked_agent_and_never_decides(loan_policy, drifted_
         "messages": [SimpleNamespace(type="ai", content="analyst note: drift concentrated in high-amount runs")]
     }
     fake_create = MagicMock(return_value=fake_agent)
-    with patch.object(da, "create_deep_agent", fake_create, create=True), patch(
-        "deepagents.create_deep_agent", fake_create
-    ):
+    with patch.object(da, "create_deep_agent", fake_create):
         note = da.deep_annotate(
             record, sandbox=ReplaySandbox(drifted_events), policy=loan_policy, model=MagicMock()
         )
@@ -125,7 +156,7 @@ def test_deep_annotate_agent_crash_is_silent(loan_policy, drifted_events):
         iterations=1,
     )
     fake_create = MagicMock(side_effect=RuntimeError("model exploded"))
-    with patch("deepagents.create_deep_agent", fake_create):
+    with patch.object(da, "create_deep_agent", fake_create):
         note = da.deep_annotate(
             record, sandbox=ReplaySandbox(drifted_events), policy=loan_policy, model=MagicMock()
         )

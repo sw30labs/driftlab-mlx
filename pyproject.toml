@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Continuous, machine-readable compliance observer for running agentic systems — behavioral drift detection against certified OSCAL baselines, with experimental drift proof."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Proprietary" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "Nicolas Cravino", email = "ncravino@mac.com" }]
 dependencies = [
     "pydantic>=2.7,<3.0",

@@ -101,7 +101,7 @@ section.lead h1 { font-size: 58px; }
 <h1 id="driftlab">DriftLab</h1>
 <h2 id="prove-what-your-agents-actually-do">Prove what your agents <em>actually</em> do.</h2>
 <p>Continuous, machine-readable compliance for running agentic systems — behavioral drift detection against certified OSCAL baselines, with <strong>experimental proof</strong>.</p>
-<p><span class="tag">local-first</span><span class="tag">deterministic</span><span class="tag">OSCAL-native</span><span class="tag">EU AI Act · SOC 2 · ISO 42001</span></p>
+<p><span class="tag">local-first</span><span class="tag">deterministic</span><span class="tag">OSCAL-shaped</span><span class="tag">EU AI Act · SOC 2 · ISO 42001</span></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="2" data-paginate="true" data-style=":root {
   --bg: #0b1220;
@@ -320,8 +320,8 @@ section.lead h1 { font-size: 58px; }
 <div class="kpi-label">EU AI Act high-risk (Annex III) obligations — credit scoring, hiring, education. Digital Omnibus (June 2026) fixed the runway; Art. 9 demands <em>continuous</em> risk management, Art. 14 demonstrable human oversight.</div>
 </div>
 <div class="col panel">
-<div class="kpi">83%</div>
-<div class="kpi-label">of Fortune 500 procurement teams plan to require <em>ISO/IEC 42001</em> alignment from vendors by 2027 (Gartner 2026). Insurers already discount AI liability 15–25% for aligned firms.</div>
+<div class="kpi">42001 + 42006</div>
+<div class="kpi-label"><em>ISO/IEC 42001</em> defines the AI management system; <em>ISO/IEC 42006</em> defines requirements for bodies that audit and certify it, creating a consistent certification path.</div>
 </div>
 <div class="col panel">
 <div class="kpi">~15×</div>
@@ -330,7 +330,7 @@ section.lead h1 { font-size: 58px; }
 </div>
 <br />
 <p><strong>The fastest-growing risk surface — agent runtime behavior — has no shipping control-monitor product.</strong></p>
-<div class="foot">Sources: Gibson Dunn & Covington on the EU Digital Omnibus (2026) · aigovernancetoday.com · TrendX Insights / Global Insight Services market reports. Details in docs/PITCH.md</div>
+<div class="foot">Sources: Gibson Dunn & Covington on the EU Digital Omnibus (2026) · ISO/IEC 42001 and ISO/IEC 42006 · TrendX Insights / Global Insight Services market reports. Details in docs/PITCH.md</div>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="4" data-paginate="true" data-style=":root {
   --bg: #0b1220;
@@ -440,11 +440,14 @@ section.lead h1 { font-size: 58px; }
   <text x="100" y="270" fill="#8ea0bd" font-size="13">pre-deploy scores, blind in production</text>
   <rect x="440" y="216" width="240" height="74" rx="10" fill="#111a2e" stroke="#22304d" />
   <text x="460" y="246" fill="#e6edf7" font-size="16" font-weight="bold">GRC / AI governance</text>
-  <text x="460" y="270" fill="#8ea0bd" font-size="13">policy editors, registries — never touch a live trace</text>
+  <text x="460" y="266" fill="#8ea0bd" font-size="12">policy editors and registries —</text>
+  <text x="460" y="282" fill="#8ea0bd" font-size="12">never touch a live trace</text>
   <rect x="440" y="44" width="240" height="90" rx="10" fill="#0d2818" stroke="#4ade80" stroke-width="2" />
-  <text x="460" y="76" fill="#4ade80" font-size="19" font-weight="bold">DriftLab</text>
-  <text x="460" y="100" fill="#e6edf7" font-size="13">runtime behavior, diffed against a certified</text>
-  <text x="460" y="118" fill="#e6edf7" font-size="13">baseline, proven by experiment, emitted as OSCAL</text>
+  <text x="460" y="66" fill="#4ade80" font-size="19" font-weight="bold">DriftLab</text>
+  <text x="460" y="84" fill="#e6edf7" font-size="11">runtime behavior diffed</text>
+  <text x="460" y="99" fill="#e6edf7" font-size="11">against a certified baseline</text>
+  <text x="460" y="114" fill="#e6edf7" font-size="11">proven by experiment</text>
+  <text x="460" y="129" fill="#e6edf7" font-size="11">OSCAL-shaped evidence each cycle</text>
 </svg>
 </div>
 <p>Infra drift detection (Terraform) proved this category works. <strong>The agent-behavior quadrant is empty.</strong></p>
@@ -832,7 +835,7 @@ section.lead h1 { font-size: 58px; }
 </tr>
 </tbody>
 </table>
-<p><code>driftlab demo</code> → detects, scores, proves, and writes the audit evidence in ~4 seconds. <strong>88-test suite, fully offline.</strong></p>
+<p><code>driftlab demo</code> → detects, scores, proves, and writes structured evidence in ~4 seconds. <strong>92-test suite, fully offline.</strong></p>
 </div>
 </div>
 </section>
@@ -926,17 +929,17 @@ section.lead { display: flex; flex-direction: column; justify-content: center; }
 section.lead h1 { font-size: 58px; }
 ;" data-marpit-pagination-total="13" data-size="16:9">
 <h6 id="evidence">Evidence</h6>
-<h1 id="the-output-is-the-audit-artifact">The output <em>is</em> the audit artifact.</h1>
+<h1 id="structured-evidence-every-cycle">Structured evidence, every cycle.</h1>
 <div class="cols">
 <div class="col">
 <p>Per agent, per cycle:</p>
 <ul>
-<li><strong><code>assessment-results.json</code></strong> — OSCAL 1.1.2: observations with trace evidence, per-control <code>satisfied</code> / <code>not-satisfied</code> findings, experiment verdicts with reproduction counts</li>
-<li><strong><code>assessment-plan.json</code></strong> — generated from the certified baseline (CA-7 cadence)</li>
+<li><strong><code>assessment-results.json</code></strong> — OSCAL 1.1.2-shaped observations with trace evidence, per-control <code>satisfied</code> / <code>not-satisfied</code> findings, and experiment verdicts with reproduction counts</li>
+<li><strong><code>assessment-plan.json</code></strong> — generated from the certified baseline (CA-7 cadence); v0.1 documents a non-strict <code>import-ssp</code> → profile reference until per-agent SSP output lands</li>
 <li><strong><code>ledger.json</code></strong> — deterministic anomaly ledger: same inputs → <strong>byte-identical bytes</strong>. An auditor can re-run the diff.</li>
 <li><strong><code>report.md</code></strong> — human-readable summary</li>
 </ul>
-<p>Maps onto <strong>EU AI Act Art. 9 / 12 / 14 · ISO 42001 §8 · SOC 2 monitoring criteria</strong>.</p>
+<p>Supports evidence mapping for <strong>EU AI Act Art. 9 / 12 / 14 · ISO 42001 §8 · SOC 2 monitoring criteria</strong>; strict OSCAL validation is a v0.2 milestone.</p>
 </div>
 <div class="col panel" style="font-family: ui-monospace, Menlo, monospace; font-size:14px; line-height:1.7;">
 <span style="color:#8ea0bd">// cycle finding, loan-officer</span><br />
@@ -1048,7 +1051,7 @@ section.lead h1 { font-size: 58px; }
 <div class="cols">
 <div class="col panel">
 <p><strong>Local-first</strong><br />
-Traces never leave the host. Deploys inside bank change-control, air-gapped dashboards included. No SaaS observability vendor can sit here.</p>
+Trace files and artifacts stay operator-controlled. The optional analyst uses only the configured OMLX endpoint, never a third-party OpenAI service. Deploys inside bank change-control, with an air-gapped dashboard.</p>
 </div>
 <div class="col panel">
 <p><strong>Deterministic</strong><br />
@@ -1059,8 +1062,8 @@ Pure-Python compliance path. Byte-identical ledgers, content-derived IDs. <em>Re
 The only system that closes the loop from &quot;flagged&quot; to &quot;reproduced.&quot; Collapses triage debates into evidence.</p>
 </div>
 <div class="col panel">
-<p><strong>OSCAL-native</strong><br />
-Output drops into NIST-standard evidence pipelines. First mover on <strong>CA-7 for agent behavior</strong>.</p>
+<p><strong>OSCAL-shaped</strong><br />
+Output is structured for NIST-standard evidence workflows. v0.1 documents one assessment-plan schema deviation; strict validation is the next hardening milestone.</p>
 </div>
 </div>
 <br />
@@ -1190,11 +1193,11 @@ section.lead h1 { font-size: 58px; }
 <td><strong>✔ sandboxed probes</strong></td>
 </tr>
 <tr>
-<td>Emits audit-grade OSCAL</td>
+<td>Emits OSCAL-shaped evidence</td>
 <td>✖</td>
 <td>partial, manual</td>
 <td>✖</td>
-<td><strong>✔ per cycle, CA-7</strong></td>
+<td><strong>✔ per cycle, CA-7; strict validation planned</strong></td>
 </tr>
 <tr>
 <td>Runs fully on-prem / air-gapped</td>
@@ -1429,7 +1432,7 @@ section.lead h1 { font-size: 58px; }
   <line x1="60" y1="60" x2="820" y2="60" stroke="#22304d" stroke-width="2" />
   <circle cx="130" cy="60" r="9" fill="#4ade80" />
   <text x="130" y="34" text-anchor="middle" fill="#4ade80" font-size="15" font-weight="bold">v0.1 — today</text>
-  <text x="130" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">7 controls · proof loop · 88 tests</text>
+  <text x="130" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">7 controls · proof loop · 92 tests</text>
   <circle cx="340" cy="60" r="9" fill="#60a5fa" />
   <text x="340" y="34" text-anchor="middle" fill="#60a5fa" font-size="15" font-weight="bold">v0.2 — +6 wks</text>
   <text x="340" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">OTel ingest · strict OSCAL CI</text>
@@ -1540,7 +1543,7 @@ section.lead h1 { font-size: 58px; }
 <br />
 <p><strong>Nicolas Cravino</strong> · sw30labs · <a href="mailto:ncravino@mac.com">ncravino@mac.com</a><br />
 <code>github: sw30labs/driftlab</code> — working demo: <code>uv run driftlab demo</code></p>
-<p><span class="tag">deterministic compliance path</span><span class="tag">traces never leave the host</span><span class="tag">verdicts from evidence, never LLM opinion</span></p>
+<p><span class="tag">deterministic compliance path</span><span class="tag">no third-party LLM egress</span><span class="tag">verdicts from evidence, never LLM opinion</span></p>
 </section>
 <script>!function(){"use strict";const t={h1:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"1"},style:"display: block; font-size: 2em; margin-block-start: 0.67em; margin-block-end: 0.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h2:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"2"},style:"display: block; font-size: 1.5em; margin-block-start: 0.83em; margin-block-end: 0.83em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h3:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"3"},style:"display: block; font-size: 1.17em; margin-block-start: 1em; margin-block-end: 1em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h4:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"4"},style:"display: block; margin-block-start: 1.33em; margin-block-end: 1.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h5:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"5"},style:"display: block; font-size: 0.83em; margin-block-start: 1.67em; margin-block-end: 1.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h6:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"6"},style:"display: block; font-size: 0.67em; margin-block-start: 2.33em; margin-block-end: 2.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},span:{proto:()=>HTMLSpanElement},pre:{proto:()=>HTMLElement,style:"display: block; font-family: monospace; white-space: pre; margin: 1em 0; --marp-auto-scaling-white-space: pre;"}},e="data-marp-auto-scaling-wrapper",i="data-marp-auto-scaling-svg",n="data-marp-auto-scaling-container";class s extends HTMLElement{container;containerSize;containerObserver;svg;svgComputedStyle;svgPreserveAspectRatio="xMinYMid meet";wrapper;wrapperSize;wrapperObserver;constructor(){super();const t=t=>([e])=>{const{width:i,height:n}=e.contentRect;this[t]={width:i,height:n},this.updateSVGRect()};this.attachShadow({mode:"open"}),this.containerObserver=new ResizeObserver(t("containerSize")),this.wrapperObserver=new ResizeObserver((...e)=>{t("wrapperSize")(...e),this.flushSvgDisplay()})}static get observedAttributes(){return["data-downscale-only"]}connectedCallback(){this.shadowRoot.innerHTML=`\n<style>\n  svg[${i}] { display: block; width: 100%; height: auto; vertical-align: top; }\n  span[${n}] { display: table; white-space: var(--marp-auto-scaling-white-space, nowrap); width: max-content; }\n</style>\n<div ${e}>\n  <svg part="svg" ${i}>\n    <foreignObject><span ${n}><slot></slot></span></foreignObject>\n  </svg>\n</div>\n    `.split(/\n\s*/).join(""),this.wrapper=this.shadowRoot.querySelector(`div[${e}]`)??void 0;const t=this.svg;this.svg=this.wrapper?.querySelector(`svg[${i}]`)??void 0,this.svg!==t&&(this.svgComputedStyle=this.svg?window.getComputedStyle(this.svg):void 0),this.container=this.svg?.querySelector(`span[${n}]`)??void 0,this.observe()}disconnectedCallback(){this.svg=void 0,this.svgComputedStyle=void 0,this.wrapper=void 0,this.container=void 0,this.observe()}attributeChangedCallback(){this.observe()}flushSvgDisplay(){const{svg:t}=this;t&&(t.style.display="inline",requestAnimationFrame(()=>{t.style.display=""}))}observe(){this.containerObserver.disconnect(),this.wrapperObserver.disconnect(),this.wrapper&&this.wrapperObserver.observe(this.wrapper),this.container&&this.containerObserver.observe(this.container),this.svgComputedStyle&&this.observeSVGStyle(this.svgComputedStyle)}observeSVGStyle(t){const e=()=>{const i=(()=>{const e=t.getPropertyValue("--preserve-aspect-ratio");if(e)return e.trim();return`x${(({textAlign:t,direction:e})=>{if(t.endsWith("left"))return"Min";if(t.endsWith("right"))return"Max";if("start"===t||"end"===t){let i="rtl"===e;return"end"===t&&(i=!i),i?"Max":"Min"}return"Mid"})(t)}YMid meet`})();i!==this.svgPreserveAspectRatio&&(this.svgPreserveAspectRatio=i,this.updateSVGRect()),t===this.svgComputedStyle&&requestAnimationFrame(e)};e()}updateSVGRect(){let t=Math.ceil(this.containerSize?.width??0);const e=Math.ceil(this.containerSize?.height??0);void 0!==this.dataset.downscaleOnly&&(t=Math.max(t,this.wrapperSize?.width??0));const i=this.svg?.querySelector(":scope > foreignObject");if(i?.setAttribute("width",`${t}`),i?.setAttribute("height",`${e}`),this.svg&&(this.svg.setAttribute("viewBox",`0 0 ${t} ${e}`),this.svg.setAttribute("preserveAspectRatio",this.svgPreserveAspectRatio),this.svg.style.height=t<=0||e<=0?"0":""),this.container){const t=this.svgPreserveAspectRatio.toLowerCase();this.container.style.marginLeft=t.startsWith("xmid")||t.startsWith("xmax")?"auto":"0",this.container.style.marginRight=t.startsWith("xmi")?"auto":"0"}}}const r=(t,{attrs:e={},style:i})=>class extends t{constructor(...t){super(...t);for(const[t,i]of Object.entries(e))this.hasAttribute(t)||this.setAttribute(t,i);this._shadow()}static get observedAttributes(){return["data-auto-scaling"]}connectedCallback(){this._update()}attributeChangedCallback(){this._update()}_shadow(){if(!this.shadowRoot)try{this.attachShadow({mode:"open"})}catch(t){if(!(t instanceof Error&&"NotSupportedError"===t.name))throw t}return this.shadowRoot}_update(){const t=this._shadow();if(t){const e=i?`<style>:host { ${i} }</style>`:"";let n="<slot></slot>";const{autoScaling:s}=this.dataset;if(void 0!==s){n=`<marp-auto-scaling exportparts="svg:auto-scaling" ${"downscale-only"===s?"data-downscale-only":""}>${n}</marp-auto-scaling>`}t.innerHTML=e+n}}};let o;const a=()=>o??(o=!!document.createElement("div",{is:"marp-auto-scaling"}).outerHTML.startsWith("<div is"),o),l=Symbol();let c;const d="marpitSVGPolyfill:setZoomFactor,",h=Symbol(),g=Symbol();const p=()=>{const t="Apple Computer, Inc."===navigator.vendor,e=t?[v]:[],i={then:e=>(t?(async()=>{if(void 0===c){const t=document.createElement("canvas");t.width=10,t.height=10;const e=t.getContext("2d"),i=new Image(10,10),n=new Promise(t=>{i.addEventListener("load",()=>t())});i.crossOrigin="anonymous",i.src="data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%20viewBox%3D%220%200%201%201%22%3E%3CforeignObject%20width%3D%221%22%20height%3D%221%22%20requiredExtensions%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%3Cdiv%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20style%3D%22width%3A%201px%3B%20height%3A%201px%3B%20background%3A%20red%3B%20position%3A%20relative%22%3E%3C%2Fdiv%3E%3C%2FforeignObject%3E%3C%2Fsvg%3E",await n,e.drawImage(i,0,0),c=e.getImageData(5,5,1,1).data[3]<128}return c})().then(t=>{null==e||e(t?[v]:[])}):null==e||e([]),i)};return Object.assign(e,i)};let m,u;function v(t){const e="object"==typeof t&&t.target||document,i="object"==typeof t?t.zoom:t;window[g]||(Object.defineProperty(window,g,{configurable:!0,value:!0}),document.body.style.zoom=1.0001,document.body.offsetHeight,document.body.style.zoom=1,window.addEventListener("message",({data:t,origin:e})=>{if(e===window.origin)try{if(t&&"string"==typeof t&&t.startsWith(d)){const[,e]=t.split(","),i=Number.parseFloat(e);Number.isNaN(i)||(u=i)}}catch(t){console.error(t)}}));let n=!1;Array.from(e.querySelectorAll("svg[data-marpit-svg]"),t=>{var e,s,r,o;t.style.transform||(t.style.transform="translateZ(0)");const a=i||u||t.currentScale||1;m!==a&&(m=a,n=a);const l=t.getBoundingClientRect(),{length:c}=t.children;for(let i=0;i<c;i+=1){const n=t.children[i];if(n.getScreenCTM){const t=n.getScreenCTM();if(t){const i=null!==(s=null===(e=n.x)||void 0===e?void 0:e.baseVal.value)&&void 0!==s?s:0,c=null!==(o=null===(r=n.y)||void 0===r?void 0:r.baseVal.value)&&void 0!==o?o:0,d=n.children.length;for(let e=0;e<d;e+=1){const s=n.children[e];if("SECTION"===s.tagName){const{style:e}=s;e.transformOrigin||(e.transformOrigin=`${-i}px ${-c}px`),e.transform=`scale(${a}) matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e-l.left}, ${t.f-l.top}) translateZ(0.0001px)`;break}}}}}}),!1!==n&&Array.from(e.querySelectorAll("iframe"),({contentWindow:t})=>{null==t||t.postMessage(`${d}${n}`,"null"===window.origin?"*":window.origin)})}function w({once:t=!1,target:e=document}={}){const i=function(t=document){if(t[h])return t[h];let e=!0;const i=()=>{e=!1,delete t[h]};Object.defineProperty(t,h,{configurable:!0,value:i});let n=[],s=!1;(async()=>{try{n=await p()}finally{s=!0}})();const r=()=>{for(const e of n)e({target:t});s&&0===n.length||e&&window.requestAnimationFrame(r)};return r(),i}(e);return t?(i(),()=>{}):i}m=1,u=void 0;const b=Symbol(),y=(e=document)=>{if("undefined"==typeof window)throw new Error("Marp Core's browser script is valid only in browser context.");if(((e=document)=>{const i=window[l];i||customElements.define("marp-auto-scaling",s);for(const n of Object.keys(t)){const s=`marp-${n}`,o=t[n].proto();a()&&o!==HTMLElement?i||customElements.define(s,r(o,{style:t[n].style}),{extends:n}):(i||customElements.define(s,r(HTMLElement,t[n])),e.querySelectorAll(`${n}[is="${s}"]`).forEach(t=>{t.outerHTML=t.outerHTML.replace(new RegExp(`^<${n}`,"i"),`<${s}`).replace(new RegExp(`</${n}>$`,"i"),`</${s}>`)}))}window[l]=!0})(e),e[b])return e[b];const i=w({target:e}),n=()=>{i(),delete e[b]},o=Object.assign(n,{cleanup:n,update:()=>y(e)});return Object.defineProperty(e,b,{configurable:!0,value:o}),o},f=document.currentScript;y(f?f.getRootNode():document)}();
 </script></foreignObject></svg></div><script>/*!! License: https://unpkg.com/@marp-team/marp-cli@4.4.1/lib/bespoke.js.LICENSE.txt */

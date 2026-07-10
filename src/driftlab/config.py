@@ -1,14 +1,16 @@
 """Settings — pydantic-settings with env / .env overrides (glass-graph pattern).
 
-Everything is local-first: SQLite under ``data_dir``, artifacts on disk, LLM
-optional and pointed at a local OMLX server. Tests inject ``Settings`` with
-paths under pytest's tmp_path.
+Everything is local-first: SQLite under ``data_dir``, artifacts on disk, and
+the optional LLM pointed at an operator-controlled local or private-network
+OMLX endpoint, never the third-party OpenAI service. Tests inject ``Settings``
+with paths under pytest's tmp_path.
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -44,7 +46,7 @@ class Settings(BaseSettings):
     registry_path: Path = Field(default_factory=lambda: BUNDLED_SEED_REGISTRY)
 
     # --- LLM (advisory only; "none" keeps the whole platform deterministic) -
-    llm_provider: str = "none"  # none | omlx | openai
+    llm_provider: Literal["none", "omlx"] = "none"  # none | omlx
     llm_model: str = ""  # empty for omlx -> auto-discovered from /models
     omlx_base_url: str = "http://127.0.0.1:8000/v1"
     omlx_api_key: str = "test"

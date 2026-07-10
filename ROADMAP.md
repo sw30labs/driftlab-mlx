@@ -11,10 +11,10 @@ Owner: Nicolas Cravino (sw30labs). Status date: 2026-07-09.
 | 2 | OSCAL baseline: DL-1..7 catalog (800-53 crosswalk, CA-7 anchor), `dl:` profile vocabulary, fail-closed compiler | loan-officer + support-triage baselines compile; typos fatal | ✅ |
 | 3 | Behavioral diff + anomaly engine: 7 control checks, deterministic fingerprints, severity table w/ critical-sink reachability, waivers, 35/20/8/3/1 score | drifted trace → 4 findings incl. 1 CRITICAL; clean trace → 0; byte-identical ledger | ✅ |
 | 4 | Drift hypothesis + micro-experiment loop: LangGraph design→execute→evaluate→reflect, existence + windowed-rate probes, replay sandbox with enforced isolation, DeepAgents advisory pass | all 4 seeded drifts CONFIRMED with probe evidence; clean-trace re-test REFUTES; socket-booby-trap test green | ✅ |
-| 5 | Evidence + dashboard + monitor: OSCAL assessment-plan/results per cycle, markdown report, FastAPI estate UI, staleness-weighted runner, SMTP digest (never-raise), launchd/cron templates | `driftlab demo` E2E; dashboard renders air-gapped; email failure can't kill a cycle | ✅ |
-| 6 | Docs + collateral: README, RUNBOOK, CERTIFICATION-GUIDE, pitch, deck, NOTES | this repo | ✅ |
+| 5 | Evidence + dashboard + monitor: OSCAL 1.1.2-shaped assessment-plan/results per cycle, markdown report, FastAPI estate UI, staleness-weighted runner, SMTP digest (never-raise), launchd/cron templates | `driftlab demo` E2E; dashboard renders air-gapped; email failure can't kill a cycle | ✅ |
+| 6 | Docs + collateral: README, RUNBOOK, CERTIFICATION-GUIDE, pitch, deck | this repo | ✅ |
 
-Suite: 88 tests green (unit, integration, E2E replay, determinism, sandbox
+Suite: 92 tests green (unit, integration, E2E replay, determinism, sandbox
 safety, LLM-optional).
 
 ## v0.2 — Hardening for a first design partner (≈ 4–6 weeks)
@@ -74,5 +74,6 @@ safety, LLM-optional).
 
 ## Standing invariants (never traded away)
 
-Deterministic compliance path · local-first, traces stay on host · provenance
-load-bearing · idempotent by construction · probes never touch production.
+Deterministic compliance path · local-first, traces stay on operator-controlled
+systems · provenance load-bearing · idempotent by construction · probes never
+touch production.
