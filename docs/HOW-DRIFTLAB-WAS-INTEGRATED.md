@@ -3,6 +3,11 @@
 The first real-agent integration, documented as a reusable playbook. Follow it
 to hook the next agent; the checklist at the end is the part to copy.
 
+> **Repository scope.** The candidate source repositories discussed in this
+> guide are private. They are not required to run DriftLab or reproduce its
+> bundled demo. Access is not included or guaranteed; the author may grant it
+> only on an ad hoc, case-by-case basis.
+
 **The subject:** `REPOS/soc-ir-training-cli` — a LangGraph SOC/IR training
 platform whose tabletop test executor makes per-inject decisions: select a
 playbook, check for incident reclassification, decide whether a human must

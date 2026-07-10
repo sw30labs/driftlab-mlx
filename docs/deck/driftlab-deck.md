@@ -60,7 +60,7 @@ style: |
 
 Continuous, machine-readable compliance for running agentic systems — behavioral drift detection against certified OSCAL baselines, with **experimental proof**.
 
-<span class="tag">local-first</span><span class="tag">deterministic</span><span class="tag">OSCAL-native</span><span class="tag">EU AI Act · SOC 2 · ISO 42001</span>
+<span class="tag">local-first</span><span class="tag">deterministic</span><span class="tag">OSCAL-shaped</span><span class="tag">EU AI Act · SOC 2 · ISO 42001</span>
 
 ---
 
@@ -116,8 +116,8 @@ Silent autonomy creep: no incident, no alert, no evidence trail — until the au
 <div class="kpi-label">EU AI Act high-risk (Annex III) obligations — credit scoring, hiring, education. Digital Omnibus (June 2026) fixed the runway; Art. 9 demands <em>continuous</em> risk management, Art. 14 demonstrable human oversight.</div>
 </div>
 <div class="col panel">
-<div class="kpi">83%</div>
-<div class="kpi-label">of Fortune 500 procurement teams plan to require <em>ISO/IEC 42001</em> alignment from vendors by 2027 (Gartner 2026). Insurers already discount AI liability 15–25% for aligned firms.</div>
+<div class="kpi">42001 + 42006</div>
+<div class="kpi-label"><em>ISO/IEC 42001</em> defines the AI management system; <em>ISO/IEC 42006</em> defines requirements for bodies that audit and certify it, creating a consistent certification path.</div>
 </div>
 <div class="col panel">
 <div class="kpi">~15×</div>
@@ -129,7 +129,7 @@ Silent autonomy creep: no incident, no alert, no evidence trail — until the au
 
 **The fastest-growing risk surface — agent runtime behavior — has no shipping control-monitor product.**
 
-<div class="foot">Sources: Gibson Dunn & Covington on the EU Digital Omnibus (2026) · aigovernancetoday.com · TrendX Insights / Global Insight Services market reports. Details in docs/PITCH.md</div>
+<div class="foot">Sources: Gibson Dunn & Covington on the EU Digital Omnibus (2026) · ISO/IEC 42001 and ISO/IEC 42006 · TrendX Insights / Global Insight Services market reports. Details in docs/PITCH.md</div>
 
 ---
 
@@ -157,12 +157,15 @@ Silent autonomy creep: no incident, no alert, no evidence trail — until the au
 
   <rect x="440" y="216" width="240" height="74" rx="10" fill="#111a2e" stroke="#22304d"/>
   <text x="460" y="246" fill="#e6edf7" font-size="16" font-weight="bold">GRC / AI governance</text>
-  <text x="460" y="270" fill="#8ea0bd" font-size="13">policy editors, registries — never touch a live trace</text>
+  <text x="460" y="266" fill="#8ea0bd" font-size="12">policy editors and registries —</text>
+  <text x="460" y="282" fill="#8ea0bd" font-size="12">never touch a live trace</text>
 
   <rect x="440" y="44" width="240" height="90" rx="10" fill="#0d2818" stroke="#4ade80" stroke-width="2"/>
-  <text x="460" y="76" fill="#4ade80" font-size="19" font-weight="bold">DriftLab</text>
-  <text x="460" y="100" fill="#e6edf7" font-size="13">runtime behavior, diffed against a certified</text>
-  <text x="460" y="118" fill="#e6edf7" font-size="13">baseline, proven by experiment, emitted as OSCAL</text>
+  <text x="460" y="66" fill="#4ade80" font-size="19" font-weight="bold">DriftLab</text>
+  <text x="460" y="84" fill="#e6edf7" font-size="11">runtime behavior diffed</text>
+  <text x="460" y="99" fill="#e6edf7" font-size="11">against a certified baseline</text>
+  <text x="460" y="114" fill="#e6edf7" font-size="11">proven by experiment</text>
+  <text x="460" y="129" fill="#e6edf7" font-size="11">OSCAL-shaped evidence each cycle</text>
 </svg>
 </div>
 
@@ -275,7 +278,7 @@ Re-testing last cycle's confirmed drift against fresh traces gives you **remedia
 | Unvetted tool `external_data_broker` | **2** reproduced invocations |
 | Error fallback skipped | **1/2** errors unhandled |
 
-`driftlab demo` → detects, scores, proves, and writes the audit evidence in ~4 seconds. **88-test suite, fully offline.**
+`driftlab demo` → detects, scores, proves, and writes structured evidence in ~4 seconds. **92-test suite, fully offline.**
 
 </div>
 </div>
@@ -284,19 +287,19 @@ Re-testing last cycle's confirmed drift against fresh traces gives you **remedia
 
 ###### Evidence
 
-# The output *is* the audit artifact.
+# Structured evidence, every cycle.
 
 <div class="cols">
 <div class="col">
 
 Per agent, per cycle:
 
-- **`assessment-results.json`** — OSCAL 1.1.2: observations with trace evidence, per-control `satisfied` / `not-satisfied` findings, experiment verdicts with reproduction counts
-- **`assessment-plan.json`** — generated from the certified baseline (CA-7 cadence)
+- **`assessment-results.json`** — OSCAL 1.1.2-shaped observations with trace evidence, per-control `satisfied` / `not-satisfied` findings, and experiment verdicts with reproduction counts
+- **`assessment-plan.json`** — generated from the certified baseline (CA-7 cadence); v0.1 documents a non-strict `import-ssp` → profile reference until per-agent SSP output lands
 - **`ledger.json`** — deterministic anomaly ledger: same inputs → **byte-identical bytes**. An auditor can re-run the diff.
 - **`report.md`** — human-readable summary
 
-Maps onto **EU AI Act Art. 9 / 12 / 14 · ISO 42001 §8 · SOC 2 monitoring criteria**.
+Supports evidence mapping for **EU AI Act Art. 9 / 12 / 14 · ISO 42001 §8 · SOC 2 monitoring criteria**; strict OSCAL validation is a v0.2 milestone.
 
 </div>
 <div class="col panel" style="font-family: ui-monospace, Menlo, monospace; font-size:14px; line-height:1.7;">
@@ -325,7 +328,7 @@ Maps onto **EU AI Act Art. 9 / 12 / 14 · ISO 42001 §8 · SOC 2 monitoring crit
 <div class="col panel">
 
 **Local-first**
-Traces never leave the host. Deploys inside bank change-control, air-gapped dashboards included. No SaaS observability vendor can sit here.
+Trace files and artifacts stay operator-controlled. The optional analyst uses only the configured OMLX endpoint, never a third-party OpenAI service. Deploys inside bank change-control, with an air-gapped dashboard.
 
 </div>
 <div class="col panel">
@@ -342,8 +345,8 @@ The only system that closes the loop from "flagged" to "reproduced." Collapses t
 </div>
 <div class="col panel">
 
-**OSCAL-native**
-Output drops into NIST-standard evidence pipelines. First mover on **CA-7 for agent behavior**.
+**OSCAL-shaped**
+Output is structured for NIST-standard evidence workflows. v0.1 documents one assessment-plan schema deviation; strict validation is the next hardening milestone.
 
 </div>
 </div>
@@ -363,7 +366,7 @@ Four of five engines are proven sw30labs systems — **glass-graph** (determinis
 | Sees runtime agent decisions | ✔ traces | ✖ | ✖ | **✔ canonical events** |
 | Diffs against certified baseline | ✖ | ✖ documents only | ✔ for infra | **✔ behavioral, 7 controls** |
 | Proves drift experimentally | ✖ | ✖ | ✖ | **✔ sandboxed probes** |
-| Emits audit-grade OSCAL | ✖ | partial, manual | ✖ | **✔ per cycle, CA-7** |
+| Emits OSCAL-shaped evidence | ✖ | partial, manual | ✖ | **✔ per cycle, CA-7; strict validation planned** |
 | Runs fully on-prem / air-gapped | partial | partial | ✔ | **✔ local-first by design** |
 
 <br>
@@ -412,7 +415,7 @@ Observability players *could* add attestation — but their architecture (cloud 
   <line x1="60" y1="60" x2="820" y2="60" stroke="#22304d" stroke-width="2"/>
   <circle cx="130" cy="60" r="9" fill="#4ade80"/>
   <text x="130" y="34" text-anchor="middle" fill="#4ade80" font-size="15" font-weight="bold">v0.1 — today</text>
-  <text x="130" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">7 controls · proof loop · 88 tests</text>
+  <text x="130" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">7 controls · proof loop · 92 tests</text>
   <circle cx="340" cy="60" r="9" fill="#60a5fa"/>
   <text x="340" y="34" text-anchor="middle" fill="#60a5fa" font-size="15" font-weight="bold">v0.2 — +6 wks</text>
   <text x="340" y="92" text-anchor="middle" fill="#8ea0bd" font-size="12">OTel ingest · strict OSCAL CI</text>
@@ -445,4 +448,4 @@ Regulated teams running agents in production. Success is binary: **one audit fin
 **Nicolas Cravino** · sw30labs · ncravino@mac.com
 `github: sw30labs/driftlab` — working demo: `uv run driftlab demo`
 
-<span class="tag">deterministic compliance path</span><span class="tag">traces never leave the host</span><span class="tag">verdicts from evidence, never LLM opinion</span>
+<span class="tag">deterministic compliance path</span><span class="tag">no third-party LLM egress</span><span class="tag">verdicts from evidence, never LLM opinion</span>

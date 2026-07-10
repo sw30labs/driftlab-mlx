@@ -24,13 +24,15 @@ observed behavior against the baseline every cycle, and — uniquely — **prove
 suspected drift with a micro-experiment**: a controlled probe against a
 sandboxed replay that reproduces the violation or refutes it. Output per
 cycle: a compliance score, a deterministic anomaly ledger, and OSCAL
-assessment-results that drop straight into a SOC 2 / EU AI Act / ISO 42001
-evidence pack (anchored on SP 800-53 **CA-7**, continuous monitoring).
+1.1.2-shaped assessment artifacts designed to support SOC 2 / EU AI Act / ISO
+42001 evidence workflows (anchored on SP 800-53 **CA-7**, continuous
+monitoring). v0.1 documents one assessment-plan deviation and does not yet
+claim strict OSCAL schema conformance.
 
 Working v1 today: 7-control behavioral catalog, deterministic diff + scoring
 engine, experiment loop with sandboxed replay (verdicts are evidence-computed,
 never LLM opinion), staleness-weighted estate monitor, estate dashboard,
-88-test suite. Demo: a drifted loan-officer agent scores 5/100 with all four
+92-test suite. Demo: a drifted loan-officer agent scores 5/100 with all four
 seeded drifts detected *and experimentally confirmed*; its compliant twin
 scores 100 with zero false positives.
 
@@ -41,9 +43,10 @@ scores 100 with zero false positives.
   2027**.¹ Risk management must be a "continuous iterative process" (Art. 9),
   human oversight demonstrable (Art. 14), logging mandatory (Art. 12). The
   build-out window for continuous evidence is *now*.
-* **ISO/IEC 42001 procurement pressure**: 83% of Fortune 500 procurement teams
-  plan to require ISO 42001 alignment from vendors by 2027 (Gartner, 2026);
-  insurers already discount AI liability premiums 15–25% for aligned firms.²
+* **Auditable AI governance is standardizing**: ISO/IEC 42001 is the first
+  international AI management-system standard; ISO/IEC 42006 adds requirements
+  for bodies that audit and certify those systems, creating a consistent,
+  credible certification path.²
 * **AI governance spend** is projected to grow from ~$0.4–0.9B (2025) to
   $6–7B by 2034–35 (23–35% CAGR)³ — while the fastest-growing risk surface,
   *agent runtime behavior*, has no shipping control-monitor product.
@@ -59,12 +62,16 @@ combination (runtime decision capture) × (deterministic baseline diff) ×
 
 ## Moat
 
-**Local-first + deterministic + evidence-grade.** Traces never leave the
-host — deployable inside bank change-control, where SaaS observability can't
-go. The compliance path is pure deterministic Python: same inputs,
+**Local-first + deterministic + evidence-grade.** Trace files and artifacts
+stay on operator-controlled systems; the optional analyst talks only to the
+operator-configured OMLX endpoint, never a third-party OpenAI service. That is
+deployable inside bank change-control, where SaaS observability can't go. The
+compliance path is pure deterministic Python: same inputs,
 byte-identical ledger — an auditor can re-run it. The experiment engine turns
-alerts into *reproduced evidence*, collapsing the triage debate. And the
-OSCAL-native design means output *is* the audit artifact, not input to one.
+alerts into *reproduced evidence*, collapsing the triage debate. The
+OSCAL-shaped design structures output for evidence workflows while explicitly
+documenting v0.1's schema deviation; strict validation is the next hardening
+milestone.
 Four of the five engines are proven in sw30labs production-shaped systems
 (glass-graph, regitel, governance-oscal, setpoint); the integration is the
 product.
@@ -85,5 +92,5 @@ days each, success = one audit finding closed with DriftLab evidence.
 
 ---
 ¹ [Gibson Dunn — EU AI Act Omnibus Agreement](https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/) · [Inside Global Tech, May 2026](https://www.insideglobaltech.com/2026/05/28/eu-ai-act-update-timeline-relief-targeted-simplification-and-new-prohibitions/)
-² [AI Governance Today — ISO 42001 in 2026](https://www.aigovernancetoday.com/news/iso-42001-redefining-ai-governance-2026)
+² [ISO — ISO/IEC 42001:2023](https://www.iso.org/standard/42001) · [ISO — ISO/IEC 42006:2025](https://www.iso.org/standard/42006)
 ³ [TrendX Insights — AI Governance Market](https://trendxinsights.com/syndicated-market-research-reports/ai-governance-market/) · [Global Insight Services](https://www.globalinsightservices.com/press-releases/ai-governance-market/)

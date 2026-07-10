@@ -24,6 +24,11 @@ from driftlab.experiment.sandbox import Sandbox
 
 logger = logging.getLogger(__name__)
 
+try:
+    from deepagents import create_deep_agent
+except ImportError:  # optional dependency; the deterministic path does not need it
+    create_deep_agent = None
+
 _SYSTEM_PROMPT = """You are DriftLab's drift analyst. A deterministic engine has already \
 reached a verdict on a drift hypothesis for an AI agent; your job is to characterize the \
 confirmed drift for a compliance audience, using the read-only probe tools against a \
@@ -71,9 +76,7 @@ def deep_annotate(
     """
     if model is None:
         return None
-    try:
-        from deepagents import create_deep_agent
-    except ImportError:
+    if create_deep_agent is None:
         logger.debug("deepagents not installed; skipping advisory pass")
         return None
     try:

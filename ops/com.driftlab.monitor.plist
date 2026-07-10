@@ -16,7 +16,7 @@
   </array>
   <key>StartCalendarInterval</key>
   <dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
-  <key>WorkingDirectory</key><string>/Users/spider/Code/REPOS/driftlab</string>
+  <key>WorkingDirectory</key><string>/absolute/path/to/driftlab</string>
   <key>StandardOutPath</key><string>/tmp/driftlab-monitor.log</string>
   <key>StandardErrorPath</key><string>/tmp/driftlab-monitor.err</string>
 </dict>

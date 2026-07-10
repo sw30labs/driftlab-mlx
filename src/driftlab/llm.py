@@ -5,11 +5,10 @@ with ``llm_provider="none"``. When OMLX is configured, the LLM adds prose:
 report narratives and experiment annotations. It never assigns severity and
 never decides a verdict.
 
-OMLX notes (article-buddy llm_factory pattern):
-* generic OpenAI-compatible client, base_url http://127.0.0.1:8000/v1, api_key "test";
-* long timeout — OMLX loads models on demand;
-* ALWAYS ``streaming=False``: the default streaming path hangs indefinitely
-  against OMLX with large models (confirmed on Qwen3.6-27B-bf16).
+OMLX exposes an OpenAI-compatible API, so this module uses ``ChatOpenAI`` as
+a protocol client pointed at the operator-configured OMLX URL. It does not
+support the third-party OpenAI service. Requests use a long timeout because
+OMLX loads models on demand and disable streaming for compatibility.
 """
 
 from __future__ import annotations
@@ -59,10 +58,19 @@ class TokenUsage:
 
 
 def build_chat_model(settings: Settings) -> Any | None:
-    """ChatOpenAI against OMLX/OpenAI, or None when provider is 'none' /
-    the optional dependency is missing. Callers must handle None."""
-    provider = settings.llm_provider.lower().strip()
-    if provider in ("", "none"):
+    """Build an OMLX client, or return ``None`` when LLMs are disabled.
+
+    ``ChatOpenAI`` supplies the OpenAI-compatible client implementation only;
+    every constructed client receives the configured OMLX base URL.
+    """
+    provider = settings.llm_provider
+    if provider == "none":
+        return None
+    # Defensive even though Settings restricts this field to ``none | omlx``.
+    # This also protects callers that bypass pydantic validation via
+    # ``model_construct``.
+    if provider != "omlx":
+        logger.warning("unsupported llm_provider %r; running LLM-free", provider)
         return None
     try:
         from langchain_openai import ChatOpenAI
@@ -70,26 +78,18 @@ def build_chat_model(settings: Settings) -> Any | None:
         logger.warning("llm_provider=%s but langchain-openai is not installed; running LLM-free", provider)
         return None
 
-    if provider == "omlx":
-        model = settings.llm_model or _discover_omlx_model(settings)
-        if not model:
-            logger.warning("no OMLX model discoverable at %s; running LLM-free", settings.omlx_base_url)
-            return None
-        return ChatOpenAI(
-            model=model,
-            base_url=settings.omlx_base_url,
-            api_key=settings.omlx_api_key,
-            timeout=settings.omlx_request_timeout,
-            streaming=False,  # REQUIRED for OMLX — streaming hangs with large models
-            temperature=0.2,
-        )
-    if provider == "openai":
-        if not settings.llm_model:
-            logger.warning("llm_provider=openai requires DRIFTLAB_LLM_MODEL; running LLM-free")
-            return None
-        return ChatOpenAI(model=settings.llm_model, streaming=False, temperature=0.2)
-    logger.warning("unknown llm_provider %r; running LLM-free", provider)
-    return None
+    model = settings.llm_model or _discover_omlx_model(settings)
+    if not model:
+        logger.warning("no OMLX model discoverable at %s; running LLM-free", settings.omlx_base_url)
+        return None
+    return ChatOpenAI(
+        model=model,
+        base_url=settings.omlx_base_url,
+        api_key=settings.omlx_api_key,
+        timeout=settings.omlx_request_timeout,
+        streaming=False,  # REQUIRED for OMLX compatibility
+        temperature=0.2,
+    )
 
 
 def _discover_omlx_model(settings: Settings) -> str | None:

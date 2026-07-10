@@ -6,7 +6,8 @@ CERTIFICATION-GUIDE has been followed and at least one agent is registered.
 ## 1. Install
 
 ```bash
-cd /Users/spider/Code/REPOS/driftlab
+git clone https://github.com/sw30labs/driftlab.git
+cd driftlab
 uv sync --all-extras        # deterministic env; or pip install -e ".[llm,test]"
 uv run pytest               # must be green before first use
 ```
@@ -47,6 +48,7 @@ is harmless (the staleness policy checks nothing that isn't due).
 launchd (macOS, recommended):
 
 ```bash
+sed -i '' "s|/absolute/path/to/driftlab|$PWD|" ops/com.driftlab.monitor.plist
 sed -i '' "s|/usr/local/bin/driftlab|$(which driftlab)|" ops/com.driftlab.monitor.plist
 cp ops/com.driftlab.monitor.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.driftlab.monitor.plist

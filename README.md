@@ -7,8 +7,8 @@ choices, escalations, refusals — and continuously diffs observed behavior
 against a **certified OSCAL baseline**. When behavior deviates, it doesn't just
 alert: it runs a **micro-experiment** against a sandboxed replay to *prove* the
 drift with reproduced evidence. Output: a compliance score, a deterministic
-anomaly ledger, and OSCAL assessment artifacts that double as SOC 2 / EU AI Act
-/ ISO 42001 audit evidence.
+anomaly ledger, and OSCAL 1.1.2-shaped assessment artifacts that can support
+SOC 2 / EU AI Act / ISO 42001 evidence workflows.
 
 Local-first. Deterministic in its compliance path. The LLM is optional and
 advisory-only — it may write prose, never a severity or a verdict.
@@ -56,7 +56,7 @@ uv sync --all-extras           # or: pip install -e ".[llm,test]"
 
 uv run driftlab demo           # full E2E on the bundled seed estate
 uv run driftlab dashboard      # http://127.0.0.1:8321
-uv run pytest                  # 88 tests, all offline, no LLM needed
+uv run pytest                  # 92 tests, all offline, no LLM needed
 ```
 
 The demo monitors two seed agents: `loan-officer` carries four known drifts
@@ -84,7 +84,7 @@ behavioral controls, each crosswalked to SP 800-53r5:
 | DL-7 | Required steps + continuous trace evidence | AU-2, AU-12, **CA-7** |
 
 CA-7 (continuous monitoring) is the family's umbrella: every monitor cycle
-emits an OSCAL **assessment-results** document attesting each control
+emits an OSCAL 1.1.2-shaped **assessment-results** document attesting each control
 `satisfied` / `not-satisfied`, with observations carrying trace evidence and
 experiment verdicts. A generated **assessment-plan** derives from the baseline.
 
@@ -147,7 +147,7 @@ Environment (prefix `DRIFTLAB_`) or `.env`:
 |---|---|---|
 | `DRIFTLAB_DATA_DIR` | `./.driftlab` | workspace (SQLite + artifacts) |
 | `DRIFTLAB_REGISTRY_PATH` | bundled demo registry | monitored-agent registry (`agents.yaml`) |
-| `DRIFTLAB_LLM_PROVIDER` | `none` | `none` \| `omlx` \| `openai` |
+| `DRIFTLAB_LLM_PROVIDER` | `none` | `none` \| `omlx` |
 | `DRIFTLAB_OMLX_BASE_URL` | `http://127.0.0.1:8000/v1` | local MLX server |
 | `DRIFTLAB_EMAIL__ENABLED` | `false` | SMTP digest delivery |
 | `SMTP_HOST/USER/PASSWORD`, `DRIFTLAB_EMAIL_TO/FROM` | — | notifier env fallbacks |
@@ -157,17 +157,30 @@ always constructs the client with `streaming=False` (streaming hangs OMLX with
 large models), and adds two advisory layers: an executive narrative in the
 report and a DeepAgents analyst pass that decomposes confirmed drifts with
 read-only probe tools. Neither can alter a finding. Everything works with no
-LLM reachable — that invariant is tested.
+LLM reachable — that invariant is tested. `ChatOpenAI` is used only as an
+OpenAI-compatible protocol client pointed at the operator-controlled OMLX
+endpoint; DriftLab has no OpenAI-service provider path.
 
 ## Evidence artifacts (per cycle)
 
 ```
 .driftlab/artifacts/<agent>/<cycle_id>/
 ├── ledger.json              deterministic anomaly ledger — byte-identical on re-run
-├── assessment-plan.json     OSCAL 1.1.2, generated from the baseline
-├── assessment-results.json  OSCAL 1.1.2, observations + findings (CA-7 evidence)
+├── assessment-plan.json     OSCAL 1.1.2-shaped, generated from the baseline
+├── assessment-results.json  OSCAL 1.1.2-shaped, observations + findings (CA-7 evidence)
 └── report.md                human-readable report
 ```
+
+### OSCAL compatibility in v0.1
+
+The catalog, profiles, assessment plans, and assessment results follow OSCAL
+1.1.2 structures, with one documented v0.1 deviation: because DriftLab does
+not yet emit a per-agent system security plan (SSP), an assessment plan's
+`import-ssp` points to the certified baseline profile. The artifacts are not
+yet validated as strictly schema-conformant OSCAL and should be treated as
+structured evidence inputs, not as proof of OSCAL conformance. The v0.2
+hardening milestone adds a component definition, minimal SSP, and `oscal-cli`
+validation in CI.
 
 Identity is content-derived throughout: event ids hash decision content,
 anomaly ids are uuid5 of the finding fingerprint (stable across cycles — dedup
@@ -213,8 +226,9 @@ docs/              RUNBOOK, CERTIFICATION-GUIDE, PITCH, deck, ROADMAP
 
 1. **Deterministic compliance path** — findings, severities, scores, verdicts
    are pure functions of (baseline, trace). The LLM is advisory only.
-2. **Local-first / private** — traces never leave the host; LLM is a local
-   OMLX server; the dashboard renders air-gapped.
+2. **Local-first / private** — traces stay on operator-controlled systems; the
+   optional LLM path uses only an operator-controlled OMLX endpoint via its
+   OpenAI-compatible protocol; the dashboard renders air-gapped.
 3. **Provenance is load-bearing** — every anomaly cites trace evidence; every
    experiment cites its probes.
 4. **Idempotent by construction** — content-derived IDs; byte-identical
@@ -228,8 +242,48 @@ docs/              RUNBOOK, CERTIFICATION-GUIDE, PITCH, deck, ROADMAP
 * `docs/RUNBOOK.md` — operator runbook (install, schedule, triage, recover)
 * `docs/CERTIFICATION-GUIDE.md` — how to certify an agent baseline (for
   compliance/security teams), with worked demo examples
-* `docs/HOW-DRIFTLAB-WAS-INTEGRATED.md` — real-world integration case study
-  (soc-ir-training-cli): code excerpts, effort numbers, reusable checklist
+* `docs/HOW-DRIFTLAB-WAS-INTEGRATED.md` — two real-world integrations:
+  [`soc-ir-training-cli`](https://github.com/sw30labs/eco-digital-twins-ir-tabletop-training)
+  (SOC/IR orchestration) and
+  [`article-buddy-2026`](https://github.com/sw30labs/article-buddy-2026)
+  (editorial automation), with code excerpts, effort numbers, and a reusable
+  checklist
 * `docs/PITCH.md`, `docs/deck/` — venture one-pager + Marp deck
 * `ROADMAP.md` — phased plan and v2/v3 vision
-* `NOTES.md` — every deviation from the build brief, with reasons
+
+> **Repository availability.** Some external repositories referenced here,
+> including systems used as DriftLab evaluation candidates and case studies,
+> are private. Those source repositories are not part of this release and are
+> not required to run DriftLab or reproduce the bundled demo. Access is not
+> included or guaranteed; the author may grant it only on an ad hoc,
+> case-by-case basis. Private links may return 404 unless access has already
+> been granted. The selected baselines, traces, and findings committed here are
+> intentionally published as real-world DriftLab examples. Imported trace
+> metadata is preserved as observed: a source-system model label such as
+> `gpt-4o` records what that candidate emitted; it does not configure or prove
+> a DriftLab network destination. DriftLab's optional analyst path remains
+> OMLX-only.
+
+The `soc-ir-training-cli` case study puts into practice a recommendation from
+my book, *AI Agents in Cybersecurity: A Practitioner's Guide* (2025 Edition).
+In Appendix C's "Operational Deployment Checklist," I write: **"Conduct
+tabletop exercises with incident response team."** DriftLab extends that
+exercise discipline to the agent itself by continuously checking its certified
+human-review gates, routing, and reporting behavior for drift.
+
+The broader agentic-automation pattern appears in Chapter 2, Section 2.5, as a
+specialized-agent "Dream Team," and in Chapter 12's "Workflow Automation":
+**"Automation agents eliminate repetitive tasks, enabling analysts to focus on
+high-value strategic work."** It also shaped the book itself: a nine-agent
+editorial workflow handled revision, fact-checking, copyright review, and QA,
+as documented in
+[Palimpsest](https://github.com/sw30labs/palimpsest) and generalized as
+[Scriptorium](https://github.com/sw30labs/scriptorium). DriftLab's second
+real-world integration, `article-buddy-2026`, applies that model to six-role
+editorial automation. Its certified baseline requires QA and fact-checking
+before publication, remediation of non-PASS verdicts, and web access only from
+the fact-checker.
+
+## License
+
+DriftLab is licensed under the [Apache License 2.0](LICENSE).
