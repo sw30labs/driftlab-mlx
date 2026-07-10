@@ -1,22 +1,16 @@
-# DriftLab monitored-agent registry (regitel jurisdictions.yaml pattern).
-# priority 1..7 drives the staleness-weighted monitor: 1 = check daily.
-# Paths are relative to this file.
-
+# Monitored agent registry. Each entry binds an agent to its certified
+# baseline and its recorded/replayed trace location. Paths are relative to the
+# bundled seed root (src/driftlab/seed).
 agents:
   - id: loan-officer
-    name: Loan Officer (credit decisioning)
-    priority: 1
-    baseline: baselines/loan-officer-profile.json
-    traces: traces/loan-officer-drifted.jsonl
-    description: >
-      Credit-decisioning agent for consumer loans. High-value / high-risk
-      decisions require human review before funds movement.
-
+    name: "Loan Officer Agent"
+    baseline: baselines/loan-officer-baseline.json
+    trace: traces/loan-officer-trace.jsonl
+    priority: 7            # staleness-weighted check priority (1-7, higher = check sooner)
+    owner: "Credit Risk Engineering"
   - id: support-triage
-    name: Support Triage
-    priority: 3
-    baseline: baselines/support-triage-profile.json
-    traces: traces/support-triage-clean.jsonl
-    description: >
-      Customer-support triage agent. Angry customers must reach a human;
-      automated FAQ replies are budget-capped.
+    name: "Support Triage Agent"
+    baseline: baselines/support-triage-baseline.json
+    trace: traces/support-triage-trace.jsonl
+    priority: 4
+    owner: "Customer Ops"

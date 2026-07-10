@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DriftLab — Estate</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 2rem; color: #1f2328; }
+  h1 { font-size: 1.4rem; }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #d0d7de; }
+  th { background: #f6f8fa; font-size: 0.85rem; }
+  .score { font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; color: #fff; }
+  a { color: #0969da; text-decoration: none; }
+</style></head>
+<body>
+<h1>DriftLab — Compliance Estate</h1>
+<p>Continuous behavioral drift monitoring against certified OSCAL baselines.</p>
+<table>
+  <thead><tr><th>Agent</th><th>Score</th><th>Priority</th><th>Owner</th><th>Last cycle</th></tr></thead>
+  <tbody>
+  {% for a in agents %}
+    <tr>
+      <td><a href="/agent/{{ a.id }}">{{ a.name }} ({{ a.id }})</a></td>
+      <td>{% if a.score is not none %}<span class="score" style="background:{{ color(a.score) }}">{{ a.score }}</span>{% else %}—{% endif %}</td>
+      <td>{{ a.priority }}</td>
+      <td>{{ a.owner }}</td>
+      <td>{{ a.last or '—' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</body></html>

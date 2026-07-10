@@ -1,96 +1,82 @@
-# DriftLab — the control monitor for the agentic economy
+# DriftLab — One-Pager
 
-*One-pager · sw30labs · July 2026*
+## The problem
 
-## Problem
+Agentic systems (LangGraph, DeepAgents, Claude Code, and friends) are now making
+real decisions — approving loans, triaging tickets, executing trades. But the
+governance tooling around them is stuck in the past:
 
-Enterprises are deploying autonomous agents into regulated workflows — credit
-decisioning, claims, support, treasury — faster than they can govern them. All
-current governance is **design-time** (policy documents, canvases, one-shot
-audits) or **static** (build-time graph diffs). Meanwhile the thing regulators
-actually care about is **runtime behavior**: did the agent route high-value
-decisions past the human gate? Did it quietly acquire a new tool? Did its
-autonomy rate creep from 40% to 65%? Today nobody can answer with evidence.
-Agent observability tools (LangSmith, Langfuse, Arize) record telemetry but
-attest nothing; GRC platforms hold documents but never touch a live trace.
+- **Design-time only.** Today's "AI governance" is canvases, policy docs, and
+  one-shot audits. Nobody watches what an agent *actually does at runtime*.
+- **Static drift detection exists for infrastructure** (Terraform/cloud config)
+  but **not for agent behavior**. The agent-equivalent is absent.
+- **Agent observability ≠ compliance.** LangSmith, Arize, Helicone, Langfuse
+  trace and visualize runs — but they are telemetry/debugging, not compliance
+  diffing against a certified baseline, and none emit OSCAL or flag governance
+  drift.
 
-## Solution
-
-**DriftLab** is a continuous, machine-readable compliance observer for running
-agents. Teams certify intended behavior as an **OSCAL baseline** (decision
-rights, routing rules, human-in-the-loop triggers, autonomy budgets, fallback
-protocols, critical sinks). DriftLab taps the agent's decision traces, diffs
-observed behavior against the baseline every cycle, and — uniquely — **proves
-suspected drift with a micro-experiment**: a controlled probe against a
-sandboxed replay that reproduces the violation or refutes it. Output per
-cycle: a compliance score, a deterministic anomaly ledger, and OSCAL
-1.1.2-shaped assessment artifacts designed to support SOC 2 / EU AI Act / ISO
-42001 evidence workflows (anchored on SP 800-53 **CA-7**, continuous
-monitoring). v0.1 documents one assessment-plan deviation and does not yet
-claim strict OSCAL schema conformance.
-
-Working v1 today: 7-control behavioral catalog, deterministic diff + scoring
-engine, experiment loop with sandboxed replay (verdicts are evidence-computed,
-never LLM opinion), staleness-weighted estate monitor, estate dashboard,
-92-test suite. Demo: a drifted loan-officer agent scores 5/100 with all four
-seeded drifts detected *and experimentally confirmed*; its compliant twin
-scores 100 with zero false positives.
-
-## Why now
-
-* **EU AI Act**: the June 2026 Digital Omnibus fixed the high-risk (Annex III —
-  credit scoring, recruitment, education) compliance deadline at **2 December
-  2027**.¹ Risk management must be a "continuous iterative process" (Art. 9),
-  human oversight demonstrable (Art. 14), logging mandatory (Art. 12). The
-  build-out window for continuous evidence is *now*.
-* **Auditable AI governance is standardizing**: ISO/IEC 42001 is the first
-  international AI management-system standard; ISO/IEC 42006 adds requirements
-  for bodies that audit and certify those systems, creating a consistent,
-  credible certification path.²
-* **AI governance spend** is projected to grow from ~$0.4–0.9B (2025) to
-  $6–7B by 2034–35 (23–35% CAGR)³ — while the fastest-growing risk surface,
-  *agent runtime behavior*, has no shipping control-monitor product.
+The result: regulated teams cannot *demonstrate* continuous control over the
+agents they ship — which is exactly what EU AI Act, SOC 2, and ISO 42001 now
+demand.
 
 ## White-space proof
 
-Observability vendors trace, they don't attest: none diff against a certified
-baseline, none emit OSCAL, none prove drift. GRC/model-risk platforms are
-document-time. Infrastructure drift detection (Terraform et al.) proves the
-category works — the agent-behavior equivalent is simply absent. The
-combination (runtime decision capture) × (deterministic baseline diff) ×
-(OSCAL evidence) × (experimental proof) is unoccupied.
+A targeted audit of the market (and the author's own portfolio) shows **no
+shipping product** combines all four of:
+
+1. observing *live agent decision traces*,
+2. diffing them against a *certified OSCAL baseline*,
+3. emitting *OSCAL audit artifacts*, and
+4. *proving* drift via a *controlled experiment* rather than merely flagging it.
+
+Agent observability tools don't do (2)/(3)/(4). AI governance platforms don't do
+(1). Continuous-compliance tools don't do (1)/(4). The intersection is empty.
+
+## The solution
+
+DriftLab is a **continuous, machine-readable compliance observer for running
+agentic systems**. It:
+
+- taps an agent's runtime decision traces (tool calls, routing, escalations,
+  refusals) and normalizes them into a canonical `DecisionEvent` model;
+- diffs them, deterministically, against a certified OSCAL baseline across
+  **seven behavioral controls** (decision rights, routing, human oversight,
+  fallback, critical sinks, autonomy budget, required steps);
+- scores compliance (0–100) and emits an anomaly ledger with full provenance;
+- and — uniquely — runs a **micro-experiment loop** that *proves or refutes*
+  each suspected drift with a controlled replay, so a confirmed finding is
+  evidence, not an alarm.
+
+It is **local-first, private, deterministic, and works without any LLM**.
 
 ## Moat
 
-**Local-first + deterministic + evidence-grade.** Trace files and artifacts
-stay on operator-controlled systems; the optional analyst talks only to the
-operator-configured OMLX endpoint, never a third-party OpenAI service. That is
-deployable inside bank change-control, where SaaS observability can't go. The
-compliance path is pure deterministic Python: same inputs,
-byte-identical ledger — an auditor can re-run it. The experiment engine turns
-alerts into *reproduced evidence*, collapsing the triage debate. The
-OSCAL-shaped design structures output for evidence workflows while explicitly
-documenting v0.1's schema deviation; strict validation is the next hardening
-milestone.
-Four of the five engines are proven in sw30labs production-shaped systems
-(glass-graph, regitel, governance-oscal, setpoint); the integration is the
-product.
+- **Local-first + private** — no agent traces leave the host; deployable inside
+  a regulated estate.
+- **Deterministic compliance path** — severities come from the diff engine, not
+  a model. Auditable and reproducible.
+- **OSCAL-native evidence** — outputs drop straight into SOC 2 / EU AI Act / ISO
+  42001 artifact packages.
+- **Experimental proof** — the differentiator. "We proved the drift on a
+  controlled replay" beats "we think it drifted" in front of an auditor.
 
-## Beachhead & model
+## Beachhead
 
-Tier-1/2 financial services deploying agents into Annex III workflows (credit
-decisioning is literally the canonical high-risk use case), then insurers and
-EU-regulated SaaS. Land: self-host license per monitored estate (compliance
-budget line, not tooling). Expand: certification advisory ("certify your
-agent baselines") and audit-as-a-service (evidence packs per assessment
-window). Wedge deal: one agent, one baseline, one regulator conversation.
+Tier-1 financial services, EU-regulated operators, and any org under SOC 2 /
+ISO 42001 running autonomous agents in production. Start with high-risk,
+well-bounded agents (loan adjudication, claims, support triage) where the
+baseline is easy to certify and the audit pressure is highest.
 
-## Ask
+## Business model
 
-Design-partner pilots: 2–3 regulated teams running agents in production, 90
-days each, success = one audit finding closed with DriftLab evidence.
+- **Self-host license** — DriftLab runs on the customer's infrastructure
+  (privacy-preserving by design); annual per-estate license.
+- **Enterprise audit-as-a-service** — managed baseline certification, evidence
+  packaging, and regulator-ready reporting on top of the self-host core.
 
----
-¹ [Gibson Dunn — EU AI Act Omnibus Agreement](https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/) · [Inside Global Tech, May 2026](https://www.insideglobaltech.com/2026/05/28/eu-ai-act-update-timeline-relief-targeted-simplification-and-new-prohibitions/)
-² [ISO — ISO/IEC 42001:2023](https://www.iso.org/standard/42001) · [ISO — ISO/IEC 42006:2025](https://www.iso.org/standard/42006)
-³ [TrendX Insights — AI Governance Market](https://trendxinsights.com/syndicated-market-research-reports/ai-governance-market/) · [Global Insight Services](https://www.globalinsightservices.com/press-releases/ai-governance-market/)
+## Status
+
+Working v2 prototype: green test suite (22 tests), full CLI, dashboard, OSCAL
+evidence emitter, staleness-weighted monitor, and a proven micro-experiment loop
+that confirms seeded drifts and refutes them on a clean trace. See `README.md`
+and `docs/`.

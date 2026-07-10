@@ -1,6 +1,6 @@
 [project]
 name = "driftlab"
-version = "0.1.0"
+version = "2.0.0"
 description = "Continuous, machine-readable compliance observer for running agentic systems — behavioral drift detection against certified OSCAL baselines, with experimental drift proof."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,7 +24,6 @@ dependencies = [
 [project.optional-dependencies]
 llm = [
     "langchain-openai>=0.3,<2.0",
-    "deepagents>=0.6,<1.0",
 ]
 test = [
     "pytest>=8.0",
@@ -44,6 +43,11 @@ packages = ["src/driftlab"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+pythonpath = ["src"]
 
 [tool.uv]
-package = true
+# This project is installed as a wheel via `uv pip install .` (the editable
+# install's .pth is not honored by this uv/venv combination). Setting
+# package=false stops `uv run` from re-installing the broken editable build,
+# so the wheel-installed console script remains importable.
+package = false

@@ -1,0 +1,100 @@
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.324}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.151}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.651}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.072}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.536}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.366}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.058}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.507}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.037}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.434}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.07}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.091}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.425}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.827}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.124}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.223}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.627}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.948}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.577}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.397}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.976}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.047}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.858}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.29}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "respond"}
+{"kind": "tool_call", "node": "respond", "tool": "draft_reply"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "classify"}
+{"kind": "tool_call", "node": "classify", "tool": "read_ticket", "payload": {"sentiment": 0.144}}
+{"kind": "route", "node": "classify", "route_from": "classify", "route_to": "escalate_human"}
+{"kind": "hitl", "node": "escalate_human", "payload": {"reason": "angry"}}

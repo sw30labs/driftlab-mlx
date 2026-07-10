@@ -1,74 +1,32 @@
-"""Staleness-weighted scheduling — regitel monitor/policy.py, ported.
+"""Staleness-weighted monitor policy.
 
-due  <=>  now - last_checked_at > interval(priority)
-order:    (priority ASC, days_overdue DESC); never-checked sorts first
-cap:      max_count guards the cycle budget.
-Naive-UTC datetimes throughout (regitel convention — don't mix aware/naive).
+Each agent carries a priority (1-7). Higher priority is checked more often.
+The schedule maps priority -> maximum hours between checks:
+
+    priority 7 -> 6h, 6 -> 12h, 5 -> 24h, 4 -> 48h, 3 -> 96h, 2 -> 168h, 1 -> 336h
+
+A monitor cycle only runs agents whose last check has aged past their interval
+(unless forced). This is the regitel-style staleness weighting, deterministic
+and free of external schedulers.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
 
-from driftlab.clock import naive_utcnow
-from driftlab.store.db import AgentRow, Database
-
-NEVER_CHECKED = float("inf")
+_PRIORITY_INTERVAL_HOURS = {7: 6, 6: 12, 5: 24, 4: 48, 3: 96, 2: 168, 1: 336}
 
 
 @dataclass
-class DueAgent:
-    id: str
-    name: str
-    priority: int
-    last_checked_at: Optional[datetime]
-    interval_days: int
-    days_since_check: float
-    days_overdue: float
+class StalenessPolicy:
+    def interval_hours(self, priority: int) -> int:
+        return _PRIORITY_INTERVAL_HOURS.get(priority, 48)
 
-
-def get_interval_days(priority: int, intervals: dict[int, int], default_interval: int) -> int:
-    return intervals.get(priority, default_interval)
-
-
-def evaluate_agent(row: AgentRow, intervals: dict[int, int], default_interval: int, now: datetime) -> DueAgent:
-    priority = row.priority or 5
-    interval = get_interval_days(priority, intervals, default_interval)
-    if row.last_checked_at is None:
-        since = NEVER_CHECKED
-        overdue = NEVER_CHECKED
-    else:
-        since = (now - row.last_checked_at).total_seconds() / 86400.0
-        overdue = since - interval
-    return DueAgent(
-        id=row.id,
-        name=row.name,
-        priority=priority,
-        last_checked_at=row.last_checked_at,
-        interval_days=interval,
-        days_since_check=since,
-        days_overdue=overdue,
-    )
-
-
-def select_due_agents(
-    database: Database,
-    intervals: dict[int, int],
-    default_interval: int,
-    *,
-    max_count: int | None = None,
-    now: datetime | None = None,
-    include_all: bool = False,
-) -> list[DueAgent]:
-    now = now or naive_utcnow()
-    with database.session() as session:
-        rows = session.query(AgentRow).filter(AgentRow.status == "active").all()
-    evaluated = [evaluate_agent(row, intervals, default_interval, now) for row in rows]
-    if not include_all:
-        evaluated = [e for e in evaluated if e.days_overdue > 0]
-    evaluated.sort(key=lambda e: (e.priority, -e.days_overdue))
-    if max_count is not None and max_count > 0:
-        evaluated = evaluated[:max_count]
-    return evaluated
+    def is_due(self, priority: int, last_checked_at: str | None, now: datetime | None = None) -> bool:
+        if last_checked_at is None:
+            return True
+        now = now or datetime.now(timezone.utc)
+        last = datetime.fromisoformat(last_checked_at.replace("Z", "+00:00"))
+        age_h = (now - last).total_seconds() / 3600.0
+        return age_h >= self.interval_hours(priority)

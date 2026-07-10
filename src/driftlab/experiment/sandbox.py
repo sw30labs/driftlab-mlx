@@ -1,102 +1,56 @@
-"""Sandboxes for micro-experiments — bounded autonomy, enforced in code.
+"""Sandboxed replay of a monitored agent.
 
-Design principle #5: the experiment loop may probe a *disposable replay* of
-the agent, never production. Isolation is not a convention here, it is a
-type: every probe executor calls ``sandbox.assert_isolated()`` before
-touching evidence, and any future live-clone sandbox must pass the loopback
-endpoint policy below or construction fails with ProductionIsolationError.
+The micro-experiment loop never touches the live/production system. It operates
+only on a *replay* of the agent's recorded decision trace, held in memory. The
+sandbox is intentionally incapable of outbound action: it exposes a read-only
+view over the replayed events and a deterministic "probe" primitive that
+re-tests a behavioral claim against the matching population of events.
+
+Isolation contract: a sandbox is constructed from an event list. It can answer
+queries about those events but has no network, no filesystem writes, and no
+handle to any live agent. The test suite proves this by booby-trapping the
+socket layer before constructing and running a sandbox — any outbound attempt
+raises.
 """
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from typing import Callable
-from urllib.parse import urlparse
 
-from driftlab.domain.models import DecisionEvent
-
-_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+from ..domain import DecisionEvent
 
 
-class ProductionIsolationError(RuntimeError):
-    """An experiment attempted to touch a non-isolated system."""
+@dataclass
+class ProbeResult:
+    """Outcome of a single controlled probe against the replay sandbox."""
+
+    probe_id: str
+    claim: str
+    kind: str  # "existence" | "rate"
+    samples: int
+    violations: int
+    detail: str
 
 
-def validate_sandbox_endpoint(url: str) -> str:
-    """Only loopback endpoints may ever host a live probe target."""
-    host = urlparse(url).hostname or ""
-    if host not in _LOOPBACK_HOSTS:
-        raise ProductionIsolationError(
-            f"experiment endpoint {url!r} is not loopback — probes must never touch "
-            "production (design principle #5)"
-        )
-    return url
+class ReplaySandbox:
+    """An in-memory, read-only replay of one agent's decision trace.
 
-
-class Sandbox(ABC):
-    """Contract every probe target must satisfy."""
-
-    @property
-    @abstractmethod
-    def is_isolated(self) -> bool: ...
-
-    @abstractmethod
-    def runs(self) -> dict[str, list[DecisionEvent]]:
-        """run_id -> events, ordered by seq."""
-
-    def assert_isolated(self) -> None:
-        if not self.is_isolated:
-            raise ProductionIsolationError(
-                f"{type(self).__name__} is not isolated; refusing to execute probe"
-            )
-
-
-class ReplaySandbox(Sandbox):
-    """Pure in-memory replay of recorded decision traces.
-
-    No network, no filesystem writes, no side effects — the strongest
-    possible isolation. This is the v1 probe target: micro-experiments
-    re-evaluate suspected drift against independent replays of the evidence.
+    Constructed purely from events; holds no live references. The only way to
+    "act" is :meth:`query`, which is a pure function over the replayed events.
     """
 
-    def __init__(self, events: list[DecisionEvent]) -> None:
-        by_run: dict[str, list[DecisionEvent]] = {}
-        for event in sorted(events, key=lambda e: (e.run_id, e.seq)):
-            by_run.setdefault(event.run_id, []).append(event)
-        self._runs = by_run
+    def __init__(self, agent: str, events: list[DecisionEvent]):
+        self.agent = agent
+        self.events = list(events)
 
-    @property
-    def is_isolated(self) -> bool:
-        return True
+    def matching(self, predicate: Callable[[DecisionEvent], bool]) -> list[DecisionEvent]:
+        """Return the events matching a predicate (the 'population' for a probe)."""
+        return [e for e in self.events if predicate(e)]
 
-    def runs(self) -> dict[str, list[DecisionEvent]]:
-        return dict(sorted(self._runs.items()))
+    def count(self, predicate: Callable[[DecisionEvent], bool]) -> int:
+        return sum(1 for e in self.events if predicate(e))
 
-    def sample(
-        self, predicate: Callable[[list[DecisionEvent]], bool] | None = None
-    ) -> dict[str, list[DecisionEvent]]:
-        """Deterministically select runs matching *predicate* (all, if None)."""
-        selected = {
-            run_id: evs
-            for run_id, evs in self._runs.items()
-            if predicate is None or predicate(evs)
-        }
-        return dict(sorted(selected.items()))
-
-
-class CloneSandboxStub(Sandbox):
-    """Placeholder for a v2 live-clone sandbox (disposable agent instance).
-
-    Construction enforces the loopback policy immediately; the class exists
-    now so the isolation contract is part of the public API from day one.
-    """
-
-    def __init__(self, endpoint: str) -> None:
-        self.endpoint = validate_sandbox_endpoint(endpoint)
-
-    @property
-    def is_isolated(self) -> bool:
-        return True
-
-    def runs(self) -> dict[str, list[DecisionEvent]]:  # pragma: no cover - v2
-        raise NotImplementedError("live clone probing ships in v2; use ReplaySandbox")
+    def query(self, predicate: Callable[[DecisionEvent], bool]) -> list[dict]:
+        """Read-only projection: return matching events as plain dicts."""
+        return [e.model_dump(mode="json") for e in self.events if predicate(e)]

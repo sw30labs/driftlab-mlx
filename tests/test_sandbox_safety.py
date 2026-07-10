@@ -1,84 +1,61 @@
-"""Experiment safety: probes never touch production, never use the network."""
+"""Sandbox isolation: the micro-experiment loop must never reach the network
+or touch production. We booby-trap the socket layer before running the entire
+experiment battery — any outbound attempt raises and fails the test.
+"""
 
 import socket
+from pathlib import Path
 
 import pytest
 
-from driftlab.anomaly.engine import AnomalyEngine
-from driftlab.diff.behavior_graph import BehaviorGraph
-from driftlab.diff.engine import BehavioralDiffEngine
-from driftlab.domain.models import DecisionEvent
-from driftlab.experiment.loop import run_experiments
-from driftlab.experiment.probes import execute_probe
-from driftlab.experiment.sandbox import (
-    CloneSandboxStub,
-    ProductionIsolationError,
-    ReplaySandbox,
-    Sandbox,
-    validate_sandbox_endpoint,
-)
-from driftlab.hypothesis.generator import generate_hypotheses
+from driftlab.baseline import BaselineCompiler, load_profile
+from driftlab.ingest import load_jsonl
+from driftlab.diff import BehavioralDiff
+from driftlab.anomaly import AnomalyEngine
+from driftlab.experiment.hypothesis import generate
+from driftlab.experiment.loop import run_experiment
+
+SEED = Path(__file__).resolve().parent.parent / "src" / "driftlab" / "seed"
 
 
-def test_replay_sandbox_is_isolated(drifted_events):
-    assert ReplaySandbox(drifted_events).is_isolated
+class _BoobySocket:
+    def __init__(self, *a, **k):
+        raise RuntimeError("NETWORK ACCESS DENIED in experiment sandbox")
+
+    def __getattr__(self, name):
+        raise RuntimeError("NETWORK ACCESS DENIED in experiment sandbox")
 
 
-def test_endpoint_policy_rejects_non_loopback():
-    validate_sandbox_endpoint("http://127.0.0.1:9999/agent")
-    validate_sandbox_endpoint("http://localhost:9999/agent")
-    for url in ("http://prod.internal/agent", "https://api.example.com", "http://10.0.0.5:8000"):
-        with pytest.raises(ProductionIsolationError):
-            validate_sandbox_endpoint(url)
+@pytest.fixture
+def no_network(monkeypatch):
+    monkeypatch.setattr(socket, "socket", _BoobySocket)
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(
+        RuntimeError("NETWORK ACCESS DENIED")))
 
 
-def test_clone_sandbox_stub_enforces_policy_at_construction():
-    with pytest.raises(ProductionIsolationError):
-        CloneSandboxStub("https://agents.prod.example.com")
+def _anoms(agent: str):
+    profile = load_profile(SEED / "baselines" / f"{agent}-baseline.json")
+    policy = BaselineCompiler().compile(profile)
+    events = load_jsonl(SEED / "traces" / f"{agent}-trace.jsonl", agent)
+    diff = BehavioralDiff(policy, events)
+    anoms = AnomalyEngine().build(diff.run(), diff=diff)
+    return policy, events, anoms
 
 
-def test_non_isolated_sandbox_is_refused(loan_policy, drifted_events):
-    class LeakySandbox(Sandbox):
-        @property
-        def is_isolated(self) -> bool:
-            return False
-
-        def runs(self) -> dict[str, list[DecisionEvent]]:
-            return {}
-
-    anomalies = AnomalyEngine().build_anomalies(
-        policy=loan_policy,
-        deviations=BehavioralDiffEngine().compare(policy=loan_policy, events=drifted_events),
-        graph=BehaviorGraph(drifted_events),
-    )
-    hypothesis = generate_hypotheses(anomalies)[0]
-    with pytest.raises(ProductionIsolationError):
-        execute_probe(
-            sandbox=LeakySandbox(),
-            hypothesis=hypothesis,
-            policy=loan_policy,
-            probe_spec=dict(hypothesis.probe_spec),
-        )
+def test_experiment_runs_with_sockets_boobytrapped(no_network):
+    policy, events, anoms = _anoms("loan-officer")
+    for a in anoms:
+        if a.waived or a.severity.value in ("info", "low"):
+            continue
+        outcome = run_experiment(generate(a, policy), events)
+        assert outcome.verdict.value in ("confirmed", "refuted", "inconclusive")
 
 
-def test_full_experiment_suite_makes_zero_network_calls(
-    monkeypatch, loan_policy, drifted_events
-):
-    """The §7 experiment-safety test: sockets are booby-trapped; the entire
-    experiment battery must still pass, proving probes are pure replay."""
-
-    def _no_network(*args, **kwargs):
-        raise AssertionError("experiment attempted a network call — isolation broken")
-
-    monkeypatch.setattr(socket, "socket", _no_network)
-    monkeypatch.setattr(socket, "create_connection", _no_network)
-
-    anomalies = AnomalyEngine().build_anomalies(
-        policy=loan_policy,
-        deviations=BehavioralDiffEngine().compare(policy=loan_policy, events=drifted_events),
-        graph=BehaviorGraph(drifted_events),
-    )
-    hypotheses = generate_hypotheses(anomalies)
-    records = run_experiments(hypotheses, sandbox=ReplaySandbox(drifted_events), policy=loan_policy)
-    assert len(records) == 4
-    assert all(r.probes for r in records)
+def test_sandbox_is_readonly():
+    from driftlab.experiment.sandbox import ReplaySandbox
+    events = load_jsonl(SEED / "traces" / "support-triage-trace.jsonl", "support-triage")
+    sb = ReplaySandbox("support-triage", events)
+    assert hasattr(sb, "matching") and hasattr(sb, "query") and hasattr(sb, "count")
+    forbidden = {"write", "send", "post", "execute_live", "call_agent"}
+    assert forbidden.isdisjoint(set(dir(sb)))

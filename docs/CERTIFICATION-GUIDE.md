@@ -1,175 +1,105 @@
-# Certifying an Agent Baseline
+# How to Certify an Agent Baseline
 
-Audience: compliance, security, and risk teams. This is the "design-time"
-half of DriftLab: turning *intended* agent behavior into a certified,
-machine-readable OSCAL baseline that the runtime monitor can enforce.
+A *certified baseline* is the machine-readable statement of an agent's intended,
+compliant behavior. DriftLab diffs observed runtime traces against it. This guide
+shows compliance/security teams how to author one.
 
-The worked example throughout is the bundled `loan-officer` agent
-(`src/driftlab/seed/baselines/loan-officer-profile.json`).
+---
 
-## 1. What you are certifying
+## 1. Mental model
 
-A baseline answers seven questions about the agent, one per DL control:
+The baseline is an **OSCAL profile** that imports the DriftLab **catalog**
+(`seed/baselines/driftlab-catalog.json`, controls DL-1..7) and *sets the
+parameters* for the agent via `props` namespaced `dl:`.
 
-| # | Question | Control |
+You are not writing OSCAL control text — you are *configuring* the seven
+behavioral controls for one agent. That is the whole job.
+
+## 2. The seven controls and their parameters
+
+| Control | `dl:` prop(s) | Meaning |
 |---|---|---|
-| 1 | Which tools may each node invoke? | DL-1 decision rights |
-| 2 | Which routing transitions are allowed? | DL-2 routing |
-| 3 | Which decisions must a human review? | DL-3 HITL triggers |
-| 4 | What must happen after an error? | DL-4 fallback |
-| 5 | Which nodes are irreversible/critical? | DL-5 critical sinks |
-| 6 | How much full autonomy is acceptable? | DL-6 autonomy budget |
-| 7 | Which steps must every run execute? | DL-7 required steps |
+| **DL-1 Decision Rights** | `dl:tool-allow` = `node\|tool1,tool2` | Tools the agent may call at a node |
+| **DL-2 Routing Integrity** | `dl:route-allow` = `from\|to` | Legal state transitions |
+| **DL-3 Human Oversight** | `dl:hitl-when` = `node\|condition` | When a decision must route to a human |
+| **DL-4 Fallback Protocol** | `dl:fallback-for` = `error-kind\|recovery` | Required recovery after an error |
+| **DL-5 Critical Sink** | `dl:critical-sink` = `node` | Irreversible-action nodes (severity escalation) |
+| **DL-6 Autonomy Budget** | `dl:autonomy-budget` = `0.0–1.0` | Max fraction of decisions that may be autonomous |
+| **DL-7 Required Steps** | `dl:required-step` = `node` | Mandatory process steps |
 
-You do not have to certify everything at once: uncertified areas are simply
-unmonitored (e.g. a from-node with no `dl:allow-route` entries is
-unconstrained). Start with critical sinks and HITL, expand from there.
+Plus: `dl:decision-node` = `node` marks the autonomous disposition nodes used to
+compute the DL-6 rate.
 
-## 2. Artifact structure
-
-Two OSCAL 1.1.2 documents:
-
-* **Catalog** (`driftlab-catalog.json`) — ships with DriftLab; defines DL-1..7
-  with prose statements and SP 800-53r5 crosswalks (CA-7 is the umbrella).
-  You normally never edit it.
-* **Profile** (one per agent) — imports the catalog and binds your concrete
-  policy via `props` in the `dl:` namespace (`https://sw30labs.com/ns/dl`).
-  This is the artifact your governance board signs off.
-
-Minimal profile skeleton:
+## 3. Worked example — the shipped `loan-officer-baseline.json`
 
 ```json
 {
-  "profile": {
-    "uuid": "<uuid>",
-    "metadata": {
-      "title": "Certified Baseline — my-agent",
-      "version": "1.0.0",
-      "oscal-version": "1.1.2",
-      "props": [
-        { "name": "dl:agent-id", "value": "my-agent", "ns": "https://sw30labs.com/ns/dl" },
-        { "name": "dl:baseline-status", "value": "certified", "ns": "https://sw30labs.com/ns/dl" }
-      ]
-    },
-    "imports": [{ "href": "driftlab-catalog.json",
-                  "include-controls": [{ "with-ids": ["dl-1","dl-2","dl-3","dl-4","dl-5","dl-6","dl-7"] }] }],
-    "modify": { "set-parameters": [], "controls": [] }
-  }
+  "agent": "loan-officer",
+  "uuid": "baseline-loan-officer-v1",
+  "metadata": { "title": "Loan Officer Agent — Certified Baseline", "version": "1.0.0" },
+  "props": [
+    {"name": "dl:tool-allow", "value": "assess|credit_check,income_verify"},
+    {"name": "dl:tool-allow", "value": "decide|approve,decline"},
+    {"name": "dl:tool-allow", "value": "disburse|wire_funds"},
+    {"name": "dl:route-allow", "value": "intake|assess"},
+    {"name": "dl:route-allow", "value": "assess|decide"},
+    {"name": "dl:route-allow", "value": "assess|hitl_review"},
+    {"name": "dl:route-allow", "value": "decide|disburse"},
+    {"name": "dl:route-allow", "value": "decide|escalate_human"},
+    {"name": "dl:hitl-when",   "value": "decide|loan_amount>50000"},
+    {"name": "dl:fallback-for","value": "downstream_error|escalate_human"},
+    {"name": "dl:critical-sink","value": "disburse"},
+    {"name": "dl:autonomy-budget","value": "0.40"},
+    {"name": "dl:decision-node","value": "decide"},
+    {"name": "dl:required-step","value": "assess"}
+  ]
 }
 ```
 
-`dl:agent-id` is mandatory and must match the registry id — a mismatched
-pairing is rejected at cycle start (fail closed).
+Interpretation: at `decide`, the agent may only `approve` or `decline`; loans
+over $50,000 must route to `hitl_review`; on a downstream error it must
+`escalate_human`; `disburse` is a critical sink; no more than 40% of decisions
+may be autonomous; and every case must pass through `assess`.
 
-## 3. The prop vocabulary
+## 4. Waivers (temporary accepted risk)
 
-All values are strings; repeat a prop to express a list.
-
-| Prop | Format | Example |
-|---|---|---|
-| `dl:allow-tool` | `node:tool` (`*` = any node) | `assess:credit_check` |
-| `dl:allow-route` | `from->to` | `assess->hitl_review` |
-| `dl:hitl-when` | `id\|node\|cond1&cond2\|route_to[\|description]` | see §4 |
-| `dl:fallback` | `node->fallback_node` (`*` = any node) | `*->escalate_human` |
-| `dl:critical-sink` | `node` | `disburse_funds` |
-| `dl:auto-target` | `node` (route target counting as full autonomy) | `auto_approve` |
-| `dl:decision-node` | `node` — explicit DL-6 decision population. Set this whenever a human gate can also route to the auto target, or the gate's exits would be miscounted as autonomous decisions. | `select_and_ask` |
-| `dl:max-auto-fraction` | `0.40` (or `set-parameters` param `dl-max-auto-fraction`) | |
-| `dl:required-step` | `node` | `assess` |
-| `dl:waiver` | `id\|cap\|fp1,fp2\|rationale[\|from_iso[\|to_iso]]` | see §5 |
-
-Conditions support `> >= < <= == !=` over the decision context; numbers
-coerce, everything else compares as strings; `&` conjoins. An absent context
-field never fires a trigger (conservative by design).
-
-Unknown `dl:` props are a **compile error**, not a warning — a typo must not
-silently certify less than you intended.
-
-## 4. Worked example: the loan-officer HITL gate
-
-Policy intent: *loans above 50,000, and any high-risk applicant, must be
-reviewed by a human before funds move.*
+If a deviation is intentional and time-boxed, record a waiver in `props`:
 
 ```json
-{ "control-id": "dl-3", "props": [
-  { "name": "dl:hitl-when", "ns": "https://sw30labs.com/ns/dl",
-    "value": "high-value|assess|amount>50000|hitl_review|Loans above 50,000 require human review before approval" },
-  { "name": "dl:hitl-when", "ns": "https://sw30labs.com/ns/dl",
-    "value": "high-risk|assess|risk==high|hitl_review|High-risk applicants require human review" }
-]}
+{"name": "dl:waiver", "value": "DL-3|loan_amount>50000|approved temp limit raise|2026-08-01|risk-123"}
 ```
 
-Reading: at node `assess`, when the decision context satisfies the condition,
-the run must subsequently route to (or reach) `hitl_review` before committing.
+Format: `control|condition|rationale|expires|ticket`. While the waiver is active
+and unexpired, that control's findings for the matching condition are marked
+`waived` and excluded from the score. Expired waivers are ignored (fail-open is
+not allowed; an expired waiver reverts to a live control).
 
-Runtime semantics you get for free:
+## 5. Certification checklist
 
-* A run matching `amount>50000` that routes `assess -> auto_approve` is a
-  DL-3 violation. Because `auto_approve` reaches the critical sink
-  `disburse_funds` (DL-5), severity escalates to **CRITICAL**.
-* The finding aggregates across runs — the bundled drifted trace yields
-  "5 of 8 matching runs bypassed the gate (rate 0.625)" with the violating
-  event ids as evidence.
-* The micro-experiment loop independently replays *all* matching runs and
-  confirms or refutes the bypass before anyone escalates.
+- [ ] Every tool the agent can call is enumerated per node (DL-1).
+- [ ] Every legal transition is enumerated (DL-2); everything else is a violation.
+- [ ] Human-oversight triggers match the agent's risk classification (DL-3).
+- [ ] Error/fallback paths are specified (DL-4).
+- [ ] Critical (irreversible) actions are marked (DL-5).
+- [ ] Autonomy ceiling is set from policy, not guesswork (DL-6).
+- [ ] Mandatory steps are listed (DL-7).
+- [ ] The baseline is reviewed and signed off by the agent owner + compliance.
+- [ ] `uuid` / `metadata.version` are bumped on every change (new hash = new cycle).
 
-Pair DL-3 with the autonomy budget (DL-6) to bound the aggregate, not just the
-individual decision:
+## 6. Validating a baseline before deployment
 
-```json
-"set-parameters": [{ "param-id": "dl-max-auto-fraction", "values": ["0.40"] }],
-{ "control-id": "dl-6", "props": [
-  { "name": "dl:auto-target", "value": "auto_approve", "ns": "https://sw30labs.com/ns/dl" }
-]}
+DriftLab **fails closed** on a malformed baseline:
+
+```bash
+uv run driftlab check --agent my-agent --no-experiments
 ```
 
-"At most 40% of routing decisions at the approval gate may take the
-full-autonomy path." The drifted seed trace runs at 65%; DriftLab flags HIGH
-(overshoot ≥ 10 points) and the experiment confirms the excess is *sustained
-across ordered windows*, not a burst.
+The compiler rejects unknown `dl:` props, out-of-range budgets, and malformed
+`node|value` syntax with a `CompileError` — it will not silently monitor against
+a broken baseline.
 
-## 5. Waivers — accepting a known finding
+## 7. Re-certification
 
-A waiver is a fingerprint-scoped, time-boxed severity cap that lives **inside
-the certified artifact** (so acceptance is itself governed and versioned):
-
-```json
-{ "name": "dl:waiver", "ns": "https://sw30labs.com/ns/dl",
-  "value": "w-2026-07|low|observed_vs_baseline:missing_step:audit|Accepted until Q3 pipeline refactor|2026-07-01T00:00:00|2026-10-01T00:00:00" }
-```
-
-The finding stays on the ledger marked `waived` with capped severity — waivers
-change scoring, never visibility. Fingerprints are printed on every finding
-(report, dashboard, ledger), so copy them from there.
-
-## 6. Certification workflow
-
-1. **Draft** — write the profile with `dl:baseline-status: draft`. Sit with
-   the agent team; the graph nodes/tools must use the same names the traces
-   emit.
-2. **Dry-run** — register the agent, collect a few days of traces, run
-   `driftlab check --agent <id>`. Expect findings; tune the baseline (or fix
-   the agent) until the diff reflects true intent. An `unknown dl: prop`
-   error, or a score that seems wrong, is caught here.
-3. **Certify** — set `dl:baseline-status: certified`, bump `version`, obtain
-   sign-off. Record the compiled `baseline_hash` (printed by `check`; also on
-   every ledger) in your change ticket — every future finding cites the exact
-   hash it was judged against.
-4. **Monitor** — set the registry priority (1 = daily) and let the scheduler
-   own it. Evidence accumulates per cycle under
-   `.driftlab/artifacts/<agent>/`.
-5. **Evolve** — baseline changes follow the same path: edit → dry-run →
-   re-certify → new hash. Old cycles remain attributable to old hashes.
-
-## 7. Evidence you can hand an auditor
-
-Per cycle, per agent: `assessment-plan.json` (what is continuously assessed
-and how — derived from the certified baseline), `assessment-results.json`
-(observations with trace evidence; per-control `satisfied`/`not-satisfied`
-findings; experiment verdicts with reproduction counts), `ledger.json`
-(deterministic, byte-stable finding record), `report.md` (human summary).
-These map directly onto EU AI Act Art. 9 (risk management as a continuous
-iterative process), Art. 14 (human oversight — DL-3/DL-6 attest it
-*operationally*), Art. 12 (record-keeping/logging), ISO/IEC 42001 §8
-(operational control) and SOC 2 monitoring criteria — with SP 800-53 CA-7 as
-the anchoring control.
+When the agent changes behavior intentionally, update the baseline, bump
+`metadata.version`, and re-run. The new baseline hash appears in every
+subsequent cycle's artifacts, giving auditors a clean before/after lineage.

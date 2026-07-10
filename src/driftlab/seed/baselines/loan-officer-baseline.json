@@ -1,0 +1,24 @@
+{
+  "agent": "loan-officer",
+  "uuid": "baseline-loan-officer-v1",
+  "metadata": {
+    "title": "Loan Officer Agent — Certified Baseline",
+    "version": "1.0.0"
+  },
+  "props": [
+    {"name": "dl:tool-allow", "value": "assess|credit_check,income_verify"},
+    {"name": "dl:tool-allow", "value": "decide|approve,decline"},
+    {"name": "dl:tool-allow", "value": "disburse|wire_funds"},
+    {"name": "dl:route-allow", "value": "intake->assess"},
+    {"name": "dl:route-allow", "value": "assess->decide"},
+    {"name": "dl:route-allow", "value": "decide->disburse"},
+    {"name": "dl:route-allow", "value": "assess->hitl_review"},
+    {"name": "dl:hitl-when", "value": "high-value|amount>50000|hitl_review|Loans above 50,000 require human review"},
+    {"name": "dl:fallback-for", "value": "timeout|escalate_timeout"},
+    {"name": "dl:fallback-for", "value": "error|escalate_error"},
+    {"name": "dl:critical-sink", "value": "disburse"},
+    {"name": "dl:autonomy-budget", "value": "0.40"},
+    {"name": "dl:decision-node", "value": "decide"},
+    {"name": "dl:required-step", "value": "assess"}
+  ]
+}

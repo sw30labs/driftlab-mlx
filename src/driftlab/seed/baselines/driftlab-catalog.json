@@ -1,125 +1,23 @@
 {
   "catalog": {
-    "uuid": "6f9a1f6e-4c2d-5b0a-8f3e-2a7c91d4b810",
+    "uuid": "driftlab-catalog-v1",
     "metadata": {
-      "title": "DriftLab Agent Behavioral Controls",
-      "version": "0.1.0",
-      "oscal-version": "1.1.2",
-      "last-modified": "2026-07-09T00:00:00Z",
-      "remarks": "Behavioral control family for running agentic systems. Prop namespace: https://sw30labs.com/ns/dl. Each DL control links to its SP 800-53r5 anchors; CA-7 (continuous monitoring) is the family's umbrella control — DriftLab is its implementation for agent behavior."
+      "title": "DriftLab Behavioral Control Catalog (DL-1..7)",
+      "version": "1.0.0",
+      "osp-800-53-crosswalk": true
     },
     "groups": [
       {
-        "id": "dl",
+        "id": "dl-family",
         "title": "Agent Behavioral Drift Controls",
         "controls": [
-          {
-            "id": "dl-1",
-            "title": "Decision Rights (Tool Allowlists)",
-            "parts": [
-              {
-                "id": "dl-1_smt",
-                "name": "statement",
-                "prose": "The agent invokes only tools on the certified per-node allowlist. Any tool call outside the allowlist is a decision-rights violation."
-              }
-            ],
-            "links": [
-              { "href": "#ac-3", "rel": "related" },
-              { "href": "#ac-6", "rel": "related" },
-              { "href": "#cm-7.5", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-2",
-            "title": "Routing Rules",
-            "parts": [
-              {
-                "id": "dl-2_smt",
-                "name": "statement",
-                "prose": "For every certified decision node, the agent routes only to certified target nodes. Observed transitions outside the certified route set are routing violations."
-              }
-            ],
-            "links": [
-              { "href": "#ac-4", "rel": "related" },
-              { "href": "#cm-3", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-3",
-            "title": "Human-in-the-Loop Triggers",
-            "parts": [
-              {
-                "id": "dl-3_smt",
-                "name": "statement",
-                "prose": "When a certified trigger condition matches a decision context, the run escalates to the certified human gate before committing output. Bypassing the gate is a HITL violation."
-              }
-            ],
-            "links": [
-              { "href": "#ac-3", "rel": "related" },
-              { "href": "#cm-3.1", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-4",
-            "title": "Fallback Protocols",
-            "parts": [
-              {
-                "id": "dl-4_smt",
-                "name": "statement",
-                "prose": "After an error at a certified node, the run's next step is the certified fallback path. Continuing normal flow past an error is a fallback violation."
-              }
-            ],
-            "links": [
-              { "href": "#si-4", "rel": "related" },
-              { "href": "#ir-4", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-5",
-            "title": "Critical Sinks",
-            "parts": [
-              {
-                "id": "dl-5_smt",
-                "name": "statement",
-                "prose": "Nodes designated critical sinks (funds movement, external commitments, irreversible actions) escalate the severity of any drift on a path that reaches them."
-              }
-            ],
-            "links": [
-              { "href": "#ac-6.1", "rel": "related" },
-              { "href": "#cm-5", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-6",
-            "title": "Autonomy Budget",
-            "parts": [
-              {
-                "id": "dl-6_smt",
-                "name": "statement",
-                "prose": "The fraction of routing decisions taking the full-autonomy path stays within the certified budget over the observation window."
-              }
-            ],
-            "links": [
-              { "href": "#ac-6", "rel": "related" },
-              { "href": "#ca-7", "rel": "related" }
-            ]
-          },
-          {
-            "id": "dl-7",
-            "title": "Required Steps and Evidence",
-            "parts": [
-              {
-                "id": "dl-7_smt",
-                "name": "statement",
-                "prose": "Every run executes the certified required steps, and runtime decision traces are captured continuously as compliance evidence."
-              }
-            ],
-            "links": [
-              { "href": "#au-2", "rel": "related" },
-              { "href": "#au-12", "rel": "related" },
-              { "href": "#ca-7", "rel": "related" }
-            ]
-          }
+          {"id": "DL-1", "title": "Decision rights", "class": "technical", "nist": ["AC-3", "AC-6", "CM-7(5)"]},
+          {"id": "DL-2", "title": "Routing rules", "class": "technical", "nist": ["AC-4", "CM-3"]},
+          {"id": "DL-3", "title": "Human-in-the-loop triggers", "class": "technical", "nist": ["AC-3", "CM-3(1)"]},
+          {"id": "DL-4", "title": "Fallback protocols", "class": "technical", "nist": ["SI-4", "IR-4"]},
+          {"id": "DL-5", "title": "Critical sinks", "class": "technical", "nist": ["AC-6(1)", "CM-5"]},
+          {"id": "DL-6", "title": "Autonomy budget", "class": "technical", "nist": ["AC-6", "CA-7"]},
+          {"id": "DL-7", "title": "Required steps + continuous trace evidence", "class": "technical", "nist": ["AU-2", "AU-12", "CA-7"]}
         ]
       }
     ]

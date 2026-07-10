@@ -1,139 +1,97 @@
 # DriftLab Operator Runbook
 
-Audience: whoever owns the monitoring estate day-to-day. Assumes the
-CERTIFICATION-GUIDE has been followed and at least one agent is registered.
+This runbook covers day-to-day operation of a DriftLab deployment: installing,
+registering agents, running cycles, reading results, and responding to findings.
+
+---
 
 ## 1. Install
 
 ```bash
-git clone https://github.com/sw30labs/driftlab.git
-cd driftlab
-uv sync --all-extras        # deterministic env; or pip install -e ".[llm,test]"
-uv run pytest               # must be green before first use
+cd /Users/spider/Desktop/driftlabv2
+uv venv --python 3.13
+uv pip install .
 ```
 
-Sanity check the estate end-to-end on bundled data:
+> Install as a wheel (`uv pip install .`), not editable. The editable install's
+> `.pth` is not honored by this uv/venv combination; see `NOTES.md`.
 
-```bash
-uv run driftlab demo
-```
+## 2. Register a monitored agent
 
-## 2. Register agents
-
-Create your own registry file and point `DRIFTLAB_REGISTRY_PATH` at it (the
-default is the bundled demo estate inside the package — don't edit that one).
-One entry per monitored agent; paths resolve relative to the registry file:
+Edit `src/driftlab/seed/agents.yaml`:
 
 ```yaml
 agents:
-  - id: loan-officer            # unique, stable
-    name: Loan Officer
-    priority: 1                 # 1..7 → check interval (1=daily by default)
-    baseline: baselines/loan-officer-profile.json   # certified OSCAL profile
-    traces: traces/loan-officer.jsonl               # file or directory of *.jsonl
+  - id: my-agent
+    name: "My Agent"
+    baseline: baselines/my-agent-baseline.json   # relative to seed root
+    trace: traces/my-agent-trace.jsonl
+    priority: 7          # 1-7, higher = checked more often (staleness weighting)
+    owner: "Team Name"
 ```
 
-Priorities map to intervals via `DRIFTLAB_INTERVALS_DAYS`
-(default `{1:1, 2:1, 3:3, 4:7, 5:7, 6:14, 7:30}`). Verify with:
+Then drop the baseline (see CERTIFICATION-GUIDE.md) and a recorded trace
+(JSONL, one DecisionEvent per line) into `seed/baselines/` and `seed/traces/`.
+
+## 3. Run a cycle
 
 ```bash
-uv run driftlab agents
+uv run driftlab check --agent my-agent          # once, now
+uv run driftlab monitor run --force             # whole estate, ignoring staleness
+uv run driftlab monitor run                     # only agents whose interval elapsed
 ```
 
-## 3. Schedule the monitor
+## 4. Read the results
 
-The monitor command is idempotent — any scheduler works, and re-running early
-is harmless (the staleness policy checks nothing that isn't due).
+- **Score** (`0–100`): starts at 100, minus `severity_weight × count` per active
+  anomaly. Weights: critical 35, high 15, medium 8, low 3, info 1. Floored at 0.
+- **Findings table**: control (DL-x), severity, title.
+- **Experiment verdicts**: `confirmed` / `refuted` / `inconclusive` — the proof
+  engine's independent reproduction of each suspected drift.
 
-launchd (macOS, recommended):
+A `confirmed` drift on a critical-sink node (DL-5 escalation) is the highest
+signal: it means an irreversible action was taken outside the certified path,
+and a controlled replay reproduced it.
 
-```bash
-sed -i '' "s|/absolute/path/to/driftlab|$PWD|" ops/com.driftlab.monitor.plist
-sed -i '' "s|/usr/local/bin/driftlab|$(which driftlab)|" ops/com.driftlab.monitor.plist
-cp ops/com.driftlab.monitor.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.driftlab.monitor.plist
-```
+## 5. Respond to a finding
 
-cron: see `ops/crontab.txt`. Both templates pass `--scheduled` so run history
-distinguishes scheduler-fired cycles from manual ones.
+1. Open the dashboard (`uv run driftlab dashboard`) → agent detail → see the
+   evidence events and the experiment rationale.
+2. If the drift is expected (e.g. an approved temporary change), issue a
+   **waiver** and record the rationale + expiry in the baseline's `props`
+   (see CERTIFICATION-GUIDE §4). Re-run; the waived control no longer scores.
+3. If the drift is real, route to the agent owner for remediation, then re-certify
+   the baseline once the agent is fixed (new baseline hash → new cycle).
 
-## 4. Email digests (optional, off by default)
+## 6. Schedule continuous monitoring
 
-```bash
-export DRIFTLAB_EMAIL__ENABLED=true
-export SMTP_HOST=smtp.example.com SMTP_USER=... SMTP_PASSWORD=...
-export DRIFTLAB_EMAIL_TO=you@example.com
-```
+Two templates ship in `ops/`:
 
-Digests send only when there is something to report (new criticals, confirmed
-drifts, score drops, errors). A broken SMTP setup can never kill a cycle: the
-error is recorded in `monitor status` and the console output.
+- **launchd** (macOS): copy `ops/com.driftlab.monitor.plist` to
+  `~/Library/LaunchAgents/`, fix the paths, `launchctl load` it. Runs hourly;
+  staleness policy decides what actually executes.
+- **cron**: `crontab ops/crontab.txt` (hourly; `--scheduled` flag).
 
-## 5. Daily triage
+The monitor writes artifacts to `DRIFTLAB_DATA_DIR/artifacts/<agent>/<cycle_id>/`
+and (optionally) emails a digest if `DRIFTLAB_EMAIL__ENABLED=true`.
 
-Start at the dashboard (`driftlab dashboard`, default `127.0.0.1:8321`):
+## 7. Audit / evidence export
 
-1. **Estate view** — scores are glass-graph coded: green ≥90, yellow ≥70,
-   orange ≥40, red below. Anything not green deserves a look.
-2. **Open the cycle** — anomalies table first. Severity semantics:
-   * `CRITICAL` — certified control violated on a path reaching a critical
-     sink (funds movement, external commitment). Treat as an incident.
-   * `HIGH` — control violated, or sustained budget breach ≥10 points.
-   * `MEDIUM/LOW` — degradation and evidence-quality signals.
-3. **Check the experiment verdicts** before escalating:
-   * `CONFIRMED` + probe evidence (`n/m violations`) — the drift is real and
-     reproduced. Escalate with the OSCAL evidence attached.
-   * `REFUTED` — the anomaly did not reproduce on independent replay. Rare;
-     usually means the trace window was pathological. File for review.
-   * `INCONCLUSIVE` — insufficient matched contexts (thin evidence). Do not
-     escalate yet; widen the trace window and re-check.
-4. **Evidence for auditors** — download `assessment-results.json` and
-   `ledger.json` from the cycle page, or pull
-   `.driftlab/artifacts/<agent>/<cycle>/` directly.
+Each cycle writes, per agent:
 
-CLI equivalents: `driftlab monitor status`, `driftlab report <cycle_id>`.
+- `assessment-plan.json` — OSCAL 1.1.2-shaped plan (controls assessed, CA-7 anchor)
+- `assessment-results.json` — OSCAL 1.1.2-shaped results (satisfied / not-satisfied
+  per control, observations with trace evidence + experiment verdicts)
+- `report.md` — operator-facing summary
+- `ledger.json` — the deterministic anomaly ledger (byte-identical on re-run)
 
-## 6. Common operations
+These are the audit artifacts for SOC 2 / EU AI Act / ISO 42001 evidence.
 
-**Force a full estate check now** (e.g. after redeploying an agent):
+## 8. Troubleshooting
 
-```bash
-uv run driftlab monitor run --force --no-email
-```
-
-**Check one agent immediately:**
-
-```bash
-uv run driftlab check --agent loan-officer
-```
-
-**Verify a remediation** — after fixing the agent, collect fresh traces and
-re-run the check. Previously confirmed hypotheses re-tested against the new
-trace should come back REFUTED (the seed suite demonstrates exactly this
-pattern with the clean loan-officer trace).
-
-**Waive an accepted finding** — add a `dl:waiver` prop to the certified
-profile (see CERTIFICATION-GUIDE §5). Waivers are fingerprint-scoped,
-time-boxed severity caps; the finding stays on the ledger marked `waived`.
-
-**Baseline updated?** The compiled policy hash changes, so the next cycle gets
-a new cycle id — history remains intact, and the ledger records which baseline
-hash every finding was judged against.
-
-## 7. Failure modes & recovery
-
-| Symptom | Cause | Action |
-|---|---|---|
-| Digest says `[agent] error: FileNotFoundError` | trace path wrong/missing | fix registry path; other agents were unaffected (batch isolation) |
-| `evidence_quality: no_trace` LOW finding | agent emitted nothing this window | check the agent's trace sink / callback wiring |
-| Score dropped, all anomalies INCONCLUSIVE | thin trace window | lower check frequency or accumulate more runs before judging |
-| `unknown dl: prop` at cycle start | typo in the certified profile | fix the profile — this is deliberately fatal (fail closed) |
-| Email failures in `monitor status` | SMTP creds | fix env; cycles were unaffected |
-| Need a clean slate | — | delete `$DRIFTLAB_DATA_DIR` (artifacts + SQLite); baselines and traces are inputs, never touched |
-
-## 8. What DriftLab will never do
-
-No outbound action on production agents: probes run only against in-memory
-replays; the endpoint policy hard-fails anything non-loopback. No LLM in the
-compliance path: unplug OMLX and every finding, score, and verdict is
-unchanged (this invariant is part of the test suite).
+| Symptom | Fix |
+|---|---|
+| `ModuleNotFoundError: driftlab` | Re-run `uv pip install .` (wheel, not editable) |
+| `score 0` unexpectedly | Check the trace actually matches the baseline's vocabulary; run `check --no-experiments` to isolate diff vs experiment |
+| Experiments `inconclusive` | The replay sample is too small for the window size; increase trace volume or lower `window_size` in `experiment/loop.py` |
+| SMTP digest not sent | Confirm `DRIFTLAB_EMAIL__ENABLED=true` and SMTP vars; failures are non-fatal (logged) |

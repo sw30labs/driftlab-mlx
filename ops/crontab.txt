@@ -1,4 +1,3 @@
-# DriftLab monitor — cron template (any scheduler works; the command is idempotent).
-# Daily at 07:00. The staleness policy decides which agents are actually due.
-# Replace /absolute/path/to/driftlab with the repository's absolute path.
-0 7 * * * cd /absolute/path/to/driftlab && /usr/bin/env driftlab monitor run --scheduled >> ~/.driftlab/monitor.log 2>&1
+# DriftLab monitor — cron template (every hour; staleness policy decides what runs)
+# Edit paths to match your install, then: crontab ops/crontab.txt
+0 * * * * cd /Users/spider/Desktop/driftlabv2 && .venv/bin/driftlab monitor run --scheduled >> $HOME/.driftlab/monitor.log 2>&1

@@ -1,187 +1,115 @@
-"""Monitor runner — one estate-wide cycle (regitel monitor/runner.py, adapted).
+"""Monitor runner — one estate cycle over the registry.
 
-Five phases: decide what to check -> run per-agent cycles (batch isolation:
-one agent's failure never kills the run) -> collect deltas -> deliver digest
-(email failures are recorded, never raised) -> record the run. Idempotent:
-re-running within the staleness interval checks nothing.
+Runs each due agent's compliance cycle, persists results, writes artifacts,
+and (optionally) sends a digest. Never raises on a single agent's failure: a
+failed agent is recorded as an error and the rest of the estate continues.
 """
 
 from __future__ import annotations
 
 import json
-import logging
-import uuid
-from datetime import datetime
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
-from driftlab.clock import naive_utcnow
-from driftlab.config import Settings
-from driftlab.cycle import CycleService
-from driftlab.domain.models import Severity, Verdict
-from driftlab.monitor.digest import MonitorDigest, render_html, render_text
-from driftlab.monitor.notifier import NotifierError, send_digest_email
-from driftlab.monitor.policy import select_due_agents
-from driftlab.monitor.registry import AgentSpec, load_registry, sync_registry
-from driftlab.store.db import AgentRow, CycleRow, Database, MonitorRunRow
-
-logger = logging.getLogger(__name__)
+from ..config import get_settings
+from ..cycle import run_cycle
+from ..emit import emit_assessment_plan, emit_assessment_results, emit_report
+from ..ingest import load_jsonl
+from ..store import AgentRecord, CycleRecord, init_db, record_agent_run, upsert_cycle
+from .notifier import send_digest
+from .policy import StalenessPolicy
+from .registry import AgentSpec, load_registry
 
 
-def _now() -> datetime:
-    return naive_utcnow()
-
-
-def run_monitor(
-    settings: Settings,
-    database: Database | None = None,
-    *,
-    agents: list[str] | None = None,
-    limit: int | None = None,
+def run_estate(
+    registry_path: str | Path | None = None,
     force: bool = False,
-    send_email: bool = True,
-    trigger: str = "manual",
-    llm: Any | None = None,
-) -> tuple[MonitorDigest, dict[str, Any]]:
+    no_email: bool = False,
+    scheduled: bool = False,
+    run_experiments: bool = True,
+) -> dict[str, Any]:
+    settings = get_settings()
     settings.ensure_dirs()
-    database = database or Database(settings.db_path)
-    run_id = str(uuid.uuid4())[:8]
-    started = _now()
-    digest = MonitorDigest(run_id=run_id, started_at=started.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    init_db()
+    registry_path = registry_path or settings.registry_path or (
+        Path(__file__).resolve().parent.parent / "seed" / "agents.yaml"
+    )
+    agents = load_registry(registry_path)
+    policy = StalenessPolicy()
 
-    # Phase 1 — registry sync + due selection
-    specs = load_registry(settings.registry_path)
-    sync_registry(database, specs)
-    spec_by_id = {s.id: s for s in specs}
+    # Upsert agent rows.
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import Session
+    from ..store import Base, _engine
+    Base.metadata.create_all(_engine())
+    with Session(_engine()) as s:
+        for a in agents:
+            rec = s.get(AgentRecord, a.id)
+            if not rec:
+                s.add(AgentRecord(id=a.id, name=a.name, baseline=a.baseline,
+                                  trace=a.trace, priority=a.priority, owner=a.owner))
+        s.commit()
 
-    if agents:
-        selected_ids = [a for a in agents if a in spec_by_id]
-        for missing in sorted(set(agents) - set(selected_ids)):
-            digest.errors.append({"agent_id": missing, "error": "not in registry"})
-    else:
-        due = select_due_agents(
-            database,
-            settings.intervals_days,
-            settings.default_interval_days,
-            max_count=limit or settings.max_agents_per_run,
-            include_all=force,
-        )
-        selected_ids = [d.id for d in due]
-
-    # Phase 2 — per-agent cycles, isolated
-    service = CycleService(settings, database=database, llm=llm)
-    previous_scores = _latest_scores(database)
-    for agent_id in selected_ids:
-        spec: AgentSpec = spec_by_id[agent_id]
-        try:
-            cycle = service.run_cycle(
-                agent_id=agent_id,
-                baseline_path=spec.baseline,
-                traces_path=spec.traces,
-                trigger=trigger,
-            )
-        except Exception as exc:  # batch isolation — record, continue
-            logger.error("monitor %s: cycle for %s failed: %s", run_id, agent_id, exc)
-            digest.errors.append({"agent_id": agent_id, "error": f"{type(exc).__name__}: {exc}"})
+    summary: dict[str, Any] = {"ran": [], "skipped": [], "errors": []}
+    for a in agents:
+        due = force or policy.is_due(a.priority, _last_cycle(a.id))
+        if not due:
+            summary["skipped"].append(a.id)
             continue
-
-        confirmed = [e for e in cycle.experiments if e.verdict is Verdict.CONFIRMED]
-        refuted = [e for e in cycle.experiments if e.verdict is Verdict.REFUTED]
-        digest.agents_checked.append(
-            {
-                "id": agent_id,
-                "score": cycle.compliance_score,
-                "anomalies": len(cycle.anomalies),
-                "confirmed": len(confirmed),
-                "cycle_id": cycle.cycle_id,
-            }
-        )
-        for anomaly in cycle.anomalies:
-            if anomaly.severity is Severity.CRITICAL and anomaly.waiver_status == "none":
-                digest.new_critical.append({"agent_id": agent_id, "title": anomaly.title})
-        for record in confirmed:
-            digest.confirmed_drifts.append(
-                {
-                    "agent_id": agent_id,
-                    "kind": record.hypothesis.kind.value,
-                    "validity": record.validity_score,
-                    "statement": record.hypothesis.statement,
-                }
-            )
-        for record in refuted:
-            digest.refuted_drifts.append({"agent_id": agent_id, "kind": record.hypothesis.kind.value})
-        prev = previous_scores.get(agent_id)
-        if prev is not None and cycle.compliance_score < prev:
-            digest.score_drops.append({"id": agent_id, "previous": prev, "current": cycle.compliance_score})
-
-        with database.session() as session:
-            row = session.get(AgentRow, agent_id)
-            if row is not None:
-                row.last_checked_at = _now()  # closes the staleness loop
-
-    digest.finished_at = _now().strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    # Phase 3 — deliver (never raises)
-    email_sent, email_error = False, None
-    should_send = send_email and settings.email.enabled and (digest.has_alerts or settings.email.send_empty)
-    if should_send:
         try:
-            recipient = send_digest_email(
-                settings.email,
-                subject=digest.subject,
-                text_body=render_text(digest),
-                html_body=render_html(digest),
-            )
-            email_sent = True
-            logger.info("monitor %s: digest sent to %s", run_id, recipient)
-        except NotifierError as exc:
-            email_error = str(exc)
-            logger.error("monitor %s: %s", run_id, email_error)
-    email_skipped_reason = None
-    if not should_send:
-        if not send_email:
-            email_skipped_reason = "--no-email"
-        elif not settings.email.enabled:
-            email_skipped_reason = "disabled in config"
-        else:
-            email_skipped_reason = "nothing to report"
+            result = _run_one(a, settings, run_experiments)
+            summary["ran"].append({
+                "agent": a.id, "score": result["score"], "cycle_id": result["cycle_id"],
+            })
+        except Exception as exc:  # never kill the whole estate
+            summary["errors"].append({"agent": a.id, "error": str(exc)})
+            traceback.print_exc()
 
-    # Phase 4 — record the run
-    with database.session() as session:
-        session.add(
-            MonitorRunRow(
-                id=run_id,
-                started_at=started,
-                finished_at=_now(),
-                agents_scanned=json.dumps(selected_ids),
-                trigger=trigger,
-                cycles_run=len(digest.agents_checked),
-                new_critical=len(digest.new_critical),
-                confirmed_drifts=len(digest.confirmed_drifts),
-                email_sent=email_sent,
-                status="completed",
-                error_log=json.dumps(digest.errors) if digest.errors else None,
-            )
-        )
+    if not no_email and settings.email__enabled:
+        send_digest(summary)
 
-    meta = {
-        "run_id": run_id,
-        "selected": selected_ids,
-        "email_sent": email_sent,
-        "email_error": email_error,
-        "email_skipped_reason": email_skipped_reason,
-    }
-    return digest, meta
+    return summary
 
 
-def _latest_scores(database: Database) -> dict[str, float]:
-    """agent_id -> most recent compliance score (for score-drop alerts)."""
-    with database.session() as session:
-        rows = (
-            session.query(CycleRow.agent_id, CycleRow.compliance_score, CycleRow.finished_at)
-            .order_by(CycleRow.agent_id, CycleRow.finished_at.asc())
-            .all()
-        )
-    scores: dict[str, float] = {}
-    for agent_id, score, _finished in rows:
-        scores[agent_id] = score  # last write wins = latest finished_at
-    return scores
+def _last_cycle(agent_id: str) -> str | None:
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from ..store import AgentRecord, _engine
+    with Session(_engine()) as s:
+        rec = s.get(AgentRecord, agent_id)
+        return rec.last_cycle if rec else None
+
+
+def _run_one(a: AgentSpec, settings, run_experiments: bool) -> dict[str, Any]:
+    seed_root = Path(__file__).resolve().parent.parent / "seed"
+    baseline_path = _resolve(a.baseline, seed_root)
+    trace_path = _resolve(a.trace, seed_root)
+    events = load_jsonl(trace_path, a.id)
+    result = run_cycle(a.id, str(baseline_path), events, run_experiments=run_experiments)
+
+    out_dir = settings.artifacts_dir / a.id / result.cycle_id
+    emit_assessment_plan(a.id, _policy_for(baseline_path), out_dir)
+    emit_assessment_results(a.id, _policy_for(baseline_path), result, out_dir)
+    emit_report(a.id, result, out_dir)
+
+    ledger_json = json.dumps(result.to_ledger(), indent=2, sort_keys=True)
+    (out_dir / "ledger.json").write_text(ledger_json)
+
+    upsert_cycle(CycleRecord(
+        id=result.cycle_id, agent=a.id, baseline_hash=result.baseline_hash,
+        trace_hash=result.trace_hash, score=result.score, ledger=ledger_json,
+        created_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
+    record_agent_run(a.id)
+    return {"score": result.score, "cycle_id": result.cycle_id}
+
+
+def _resolve(p: str, seed_root: Path) -> Path:
+    pp = Path(p)
+    return pp if pp.is_absolute() else (seed_root / pp)
+
+
+def _policy_for(baseline_path: Path):
+    from ..baseline import BaselineCompiler, load_profile
+    return BaselineCompiler().compile(load_profile(baseline_path))

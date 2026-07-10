@@ -1,43 +1,44 @@
-"""Deterministic identity: canonical JSON, content hashes, uuid5 IDs.
+"""Content-derived, deterministic identity helpers.
 
-Every ID in driftlab is a pure function of content, never of wall-clock or
-randomness (twinops principle: idempotent by construction). Re-running any
-stage on the same inputs yields byte-identical output.
+Every id in DriftLab is a pure function of content, so re-running a cycle on
+the same inputs yields byte-identical artifacts and idempotent upserts.
 """
 
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
 from typing import Any
 
-#: Root namespace for all driftlab uuid5 identifiers.
-NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "https://sw30labs.com/driftlab")
 
-_HEX_LEN = 16
-
-
-def canonical_json(payload: Any) -> str:
-    """Serialize deterministically: sorted keys, compact separators."""
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
+def sha256_bytes(*parts: str) -> str:
+    h = hashlib.sha256()
+    for p in parts:
+        h.update(p.encode("utf-8"))
+    return h.hexdigest()
 
 
-def content_hash(payload: Any) -> str:
-    """sha256 hex digest of the canonical JSON form of *payload*."""
-    return hashlib.sha256(canonical_json(payload).encode("utf-8")).hexdigest()
+def short_hash(*parts: str, length: int = 12) -> str:
+    return sha256_bytes(*parts)[:length]
 
 
-def short_hash(key: str, length: int = _HEX_LEN) -> str:
-    """Stable short hex id from an arbitrary string key (twinops ids.py pattern)."""
-    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:length]
+def event_id(agent: str, seq: int, kind: str, node: str, content: str) -> str:
+    """Stable id for a single decision event."""
+    return short_hash(agent, str(seq), kind, node, content, length=16)
 
 
-def deterministic_id(kind: str, key: str) -> str:
-    """Type-prefixed deterministic identifier, e.g. ``evt_3fa9c2...``."""
-    return f"{kind}_{short_hash(key)}"
+def anomaly_id(fingerprint: str) -> str:
+    """uuid5 of the finding fingerprint — stable across cycles (dedup free)."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, "urn:driftlab:anomaly:" + fingerprint))
 
 
-def deterministic_uuid(key: str) -> str:
-    """uuid5 within the driftlab namespace — stable across runs and hosts."""
-    return str(uuid.uuid5(NAMESPACE, key))
+def cycle_id(agent: str, baseline_hash: str, trace_hash: str) -> str:
+    return short_hash(agent, baseline_hash, trace_hash, length=16)
+
+
+def stable_json_digest(obj: Any) -> str:
+    """Deterministic digest of a JSON-serializable structure."""
+    import json
+
+    canon = json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str)
+    return sha256_bytes(canon)

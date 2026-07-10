@@ -10,4 +10,3 @@ build/
 *.egg-info/
 .env
 .DS_Store
-uv.lock

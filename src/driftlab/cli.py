@@ -1,236 +1,188 @@
-"""DriftLab CLI — Typer + Rich.
+"""DriftLab Typer CLI.
 
-    driftlab agents                    # estate + staleness status
-    driftlab check --agent loan-officer
-    driftlab monitor run [--force] [--scheduled] [--no-email]
-    driftlab monitor status
-    driftlab demo                      # full E2E on the bundled seed estate
-    driftlab report <cycle_id>
-    driftlab dashboard
+Commands:
+  driftlab agents                 estate + staleness status
+  driftlab check --agent NAME     one compliance cycle, now
+  driftlab monitor run            staleness-weighted estate cycle
+  driftlab monitor status         recent runs
+  driftlab report <cycle_id>      print a cycle's markdown report
+  driftlab dashboard              serve the estate UI
+  driftlab demo                  E2E on the bundled seed estate
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.markup import escape
 from rich.table import Table
 
-from driftlab import __version__
-from driftlab.config import Settings, get_settings
-from driftlab.domain.rendering import score_class
-from driftlab.llm import build_chat_model
-from driftlab.monitor.policy import select_due_agents
-from driftlab.monitor.registry import load_registry, sync_registry
-from driftlab.monitor.runner import run_monitor
-from driftlab.store.db import CycleRow, Database, MonitorRunRow
+from .config import get_settings
+from .monitor.registry import load_registry
+from .monitor.runner import run_estate
 
-app = typer.Typer(help="DriftLab — continuous compliance observer for running agentic systems.")
-monitor_app = typer.Typer(help="Staleness-weighted estate monitor.")
-app.add_typer(monitor_app, name="monitor")
+app = typer.Typer(help="DriftLab — continuous compliance observer for agentic systems")
 console = Console()
 
-_SCORE_STYLE = {"ok": "green", "warning": "yellow", "medium": "dark_orange", "critical": "red"}
+
+def _seed_root() -> Path:
+    return Path(__file__).resolve().parent / "seed"
 
 
-def _settings(registry: Path | None = None, data_dir: Path | None = None) -> Settings:
-    settings = get_settings()
-    if registry or data_dir:
-        overrides = {}
-        if registry:
-            overrides["registry_path"] = registry
-        if data_dir:
-            overrides["data_dir"] = data_dir
-        settings = settings.model_copy(update=overrides)
-    return settings
+def _registry_path() -> Path:
+    s = get_settings()
+    return Path(s.registry_path) if s.registry_path else _seed_root() / "agents.yaml"
 
 
 @app.command()
-def version() -> None:
-    """Print version."""
-    console.print(f"driftlab {__version__}")
-
-
-@app.command()
-def agents(
-    registry: Path | None = typer.Option(None, help="agents.yaml path (default: seed registry)"),
-    data_dir: Path | None = typer.Option(None, help="workspace dir (default: ./.driftlab)"),
-) -> None:
-    """List the monitored estate with staleness status."""
-    settings = _settings(registry, data_dir)
-    settings.ensure_dirs()
-    database = Database(settings.db_path)
-    specs = load_registry(settings.registry_path)
-    sync_registry(database, specs)
-    due = {d.id: d for d in select_due_agents(database, settings.intervals_days, settings.default_interval_days, include_all=True)}
-
-    table = Table(title="DriftLab estate")
-    for col in ("agent", "priority", "interval", "last checked", "overdue", "baseline"):
-        table.add_column(col)
-    for spec in specs:
-        d = due.get(spec.id)
-        overdue = "-" if d is None else ("never checked" if d.days_overdue == float("inf") else f"{d.days_overdue:+.1f}d")
-        last = "-" if d is None or d.last_checked_at is None else str(d.last_checked_at)
-        table.add_row(spec.id, f"P{spec.priority}", f"{d.interval_days}d" if d else "-", last, overdue, str(spec.baseline.name))
+def agents() -> None:
+    """Show the monitored estate and staleness status."""
+    regs = load_registry(_registry_path())
+    table = Table(title="DriftLab Estate")
+    table.add_column("Agent")
+    table.add_column("Priority")
+    table.add_column("Owner")
+    table.add_column("Baseline")
+    for a in regs:
+        table.add_row(a.id, str(a.priority), a.owner, a.baseline)
     console.print(table)
 
 
 @app.command()
 def check(
-    agent: str = typer.Option(..., help="agent id from the registry"),
-    registry: Path | None = typer.Option(None),
-    data_dir: Path | None = typer.Option(None),
-    probes: bool = typer.Option(True, help="run micro-experiments on findings"),
+    agent: str = typer.Option(..., "--agent", help="agent id from the registry"),
+    no_experiments: bool = typer.Option(False, "--no-experiments"),
 ) -> None:
-    """Run one compliance cycle for one agent, now."""
-    from driftlab.cycle import CycleService
+    """Run one compliance cycle for an agent, now."""
+    from .baseline import BaselineCompiler, load_profile
+    from .cycle import run_cycle
+    from .ingest import load_jsonl
+    from .emit import emit_report
+    from .config import get_settings
 
-    settings = _settings(registry, data_dir)
-    specs = {s.id: s for s in load_registry(settings.registry_path)}
-    if agent not in specs:
-        console.print(f"[red]unknown agent {agent!r}[/red] — known: {', '.join(sorted(specs))}")
+    seed = _seed_root()
+    regs = {a.id: a for a in load_registry(_registry_path())}
+    if agent not in regs:
+        console.print(f"[red]unknown agent {agent!r}[/red]")
         raise typer.Exit(1)
-    spec = specs[agent]
-    service = CycleService(settings, llm=build_chat_model(settings))
-    cycle = service.run_cycle(agent_id=agent, baseline_path=spec.baseline, traces_path=spec.traces, run_probes=probes)
-    _print_cycle(cycle)
-    console.print(f"\nartifacts: [cyan]{settings.artifacts_dir / agent / cycle.cycle_id}[/cyan]")
+    a = regs[agent]
+    events = load_jsonl(seed / a.trace, agent)
+    result = run_cycle(agent, str(seed / a.baseline), events,
+                       run_experiments=not no_experiments)
+    settings = get_settings()
+    settings.ensure_dirs()
+    out_dir = settings.artifacts_dir / agent / result.cycle_id
+    emit_report(agent, result, out_dir)
+    console.print(f"Cycle [bold]{result.cycle_id}[/bold] — score "
+                  f"[bold]{result.score}/100[/bold] — "
+                  f"{len([x for x in result.anomalies if not x.waived])} active anomalies")
+    for an in result.anomalies:
+        if not an.waived:
+            console.print(f"  [{_sev_color(an.severity.value)}]{an.severity.value.upper()}[/{_sev_color(an.severity.value)}] "
+                          f"{an.control}: {an.title}")
+    for e in result.experiments:
+        console.print(f"  experiment {e['control']} -> [cyan]{e['verdict']}[/cyan]")
 
 
-def _print_cycle(cycle) -> None:
-    style = _SCORE_STYLE[score_class(cycle.compliance_score)]
-    console.print(f"\n[bold]{cycle.agent_id}[/bold] cycle [cyan]{cycle.cycle_id}[/cyan]")
-    console.print(f"compliance score: [{style} bold]{cycle.compliance_score}[/{style} bold] / 100  {cycle.severity_counts or ''}")
-    if cycle.anomalies:
-        table = Table(show_lines=False)
-        for col in ("severity", "control", "finding", "waiver"):
-            table.add_column(col)
-        for a in cycle.anomalies:
-            sev_style = "red" if a.severity.value in ("critical", "high") else ("dark_orange" if a.severity.value == "medium" else "yellow")
-            table.add_row(f"[{sev_style}]{a.severity.value}[/{sev_style}]", (a.control_id or "-").upper(), a.title, a.waiver_status)
-        console.print(table)
-    else:
-        console.print("[green]clean — all certified controls satisfied[/green]")
-    for e in cycle.experiments:
-        v = e.verdict.value
-        v_style = {"confirmed": "red", "refuted": "green", "inconclusive": "yellow"}[v]
-        console.print(f"  experiment [{v_style}]{v.upper()}[/{v_style}] (validity {e.validity_score}): {escape(e.hypothesis.statement)}")
+@app.command()
+def monitor() -> None:
+    """Staleness-weighted estate monitor. Use `driftlab monitor --help`."""
+
+
+monitor_app = typer.Typer(help="Staleness-weighted estate monitor")
+app.add_typer(monitor_app, name="monitor")
 
 
 @monitor_app.command("run")
 def monitor_run(
-    agent: list[str] = typer.Option(None, "--agent", help="explicit agent id(s); overrides staleness policy"),
-    limit: int | None = typer.Option(None, help="max agents this run"),
-    force: bool = typer.Option(False, help="ignore staleness — check everything"),
-    email: bool = typer.Option(True, "--email/--no-email"),
-    scheduled: bool = typer.Option(False, "--scheduled", help="stamp run as scheduler-triggered"),
-    registry: Path | None = typer.Option(None),
-    data_dir: Path | None = typer.Option(None),
+    force: bool = typer.Option(False, "--force", help="ignore staleness, run all"),
+    no_email: bool = typer.Option(False, "--no-email", help="skip SMTP digest"),
+    scheduled: bool = typer.Option(False, "--scheduled", help="mark as scheduled run"),
 ) -> None:
-    """Run one estate monitor cycle (idempotent; safe under cron/launchd)."""
-    settings = _settings(registry, data_dir)
-    digest, meta = run_monitor(
-        settings,
-        agents=list(agent) if agent else None,
-        limit=limit,
-        force=force,
-        send_email=email,
-        trigger="scheduled" if scheduled else "manual",
-        llm=build_chat_model(settings),
-    )
-    from driftlab.monitor.digest import render_text
-
-    console.print(render_text(digest))
-    if meta["email_sent"]:
-        console.print("[green]digest emailed[/green]")
-    elif meta["email_error"]:
-        console.print(f"[yellow]email failed (cycle unaffected): {meta['email_error']}[/yellow]")
-    elif meta["email_skipped_reason"]:
-        console.print(f"[dim]email skipped: {meta['email_skipped_reason']}[/dim]")
+    """Run a staleness-weighted estate cycle."""
+    summary = run_estate(force=force, no_email=no_email, scheduled=scheduled)
+    console.print(f"[green]ran {len(summary['ran'])}[/green], "
+                  f"skipped {len(summary['skipped'])}, "
+                  f"errors {len(summary['errors'])}")
+    for r in summary["ran"]:
+        console.print(f"  {r['agent']}: {r['score']}/100")
 
 
 @monitor_app.command("status")
-def monitor_status(data_dir: Path | None = typer.Option(None)) -> None:
-    """Recent monitor runs."""
-    settings = _settings(None, data_dir)
-    settings.ensure_dirs()
-    database = Database(settings.db_path)
-    with database.session() as session:
-        runs = session.query(MonitorRunRow).order_by(MonitorRunRow.started_at.desc()).limit(15).all()
-    table = Table(title="monitor runs")
-    for col in ("run", "started", "trigger", "cycles", "new critical", "confirmed", "email"):
-        table.add_column(col)
-    for run in runs:
-        table.add_row(run.id, str(run.started_at), run.trigger, str(run.cycles_run),
-                      str(run.new_critical), str(run.confirmed_drifts), "sent" if run.email_sent else "-")
+def monitor_status_cmd() -> None:
+    """Show recent monitor runs."""
+    _monitor_status()
+
+
+def _monitor_status() -> None:
+    from .store import AgentRecord, init_db
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from .store import _engine
+    init_db()
+    with Session(_engine()) as s:
+        rows = s.execute(select(AgentRecord)).scalars().all()
+    table = Table(title="Recent monitor runs")
+    table.add_column("Agent")
+    table.add_column("Priority")
+    table.add_column("Last cycle")
+    for r in rows:
+        table.add_row(r.id, str(r.priority), r.last_cycle or "—")
     console.print(table)
 
 
 @app.command()
-def report(
-    cycle_id: str = typer.Argument(..., help="cycle id (see `driftlab agents` / dashboard)"),
-    data_dir: Path | None = typer.Option(None),
-) -> None:
-    """Print the markdown report of a cycle."""
-    settings = _settings(None, data_dir)
-    database = Database(settings.db_path)
-    with database.session() as session:
-        cycle = session.get(CycleRow, cycle_id)
-    if cycle is None:
-        console.print(f"[red]unknown cycle {cycle_id}[/red]")
-        raise typer.Exit(1)
-    path = settings.artifacts_dir / cycle.agent_id / cycle_id / "report.md"
-    console.print(path.read_text(encoding="utf-8"))
+def report(cycle_id: str) -> None:
+    """Print a cycle's markdown report from the store."""
+    from .store import CycleRecord, init_db
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from .store import _engine
+    init_db()
+    with Session(_engine()) as s:
+        rec = s.get(CycleRecord, cycle_id)
+        if not rec:
+            console.print(f"[red]no cycle {cycle_id!r}[/red]")
+            raise typer.Exit(1)
+        import json
+        ledger = json.loads(rec.ledger)
+    console.print(f"# {ledger['agent']} — score {ledger['score']}/100")
+    for a in ledger["anomalies"]:
+        if not a["waived"]:
+            console.print(f"  {a['severity'].upper()} {a['control']}: {a['title']}")
 
 
 @app.command()
 def dashboard(
-    host: str | None = typer.Option(None),
-    port: int | None = typer.Option(None),
-    data_dir: Path | None = typer.Option(None),
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8321, "--port"),
 ) -> None:
-    """Serve the estate dashboard."""
+    """Serve the estate dashboard (air-gapped; no CDN)."""
     import uvicorn
-
-    from driftlab.dashboard.app import create_app
-
-    settings = _settings(None, data_dir)
-    application = create_app(settings)
-    uvicorn.run(application, host=host or settings.dashboard_host, port=port or settings.dashboard_port)
+    from .dashboard.app import app as fastapi_app
+    console.print(f"[green]DriftLab dashboard at http://{host}:{port}[/green]")
+    uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
 
 
 @app.command()
-def demo(data_dir: Path | None = typer.Option(None, help="workspace (default ./.driftlab)")) -> None:
-    """Full E2E on the bundled seed estate: known-drifted loan-officer agent
-    plus a clean support-triage agent. Detects, scores, and *proves* drift."""
-    settings = _settings(None, data_dir)
-    console.rule("[bold]DriftLab demo — seed estate")
-    digest, _meta = run_monitor(settings, force=True, send_email=False, llm=build_chat_model(settings))
-    database = Database(settings.db_path)
-    with database.session() as session:
-        cycles = {c.cycle_id: c for c in session.query(CycleRow).all()}
-    for item in digest.agents_checked:
-        cycle = cycles.get(item["cycle_id"])
-        style = _SCORE_STYLE[score_class(item["score"])]
-        console.print(
-            f"  [bold]{item['id']}[/bold]: score [{style}]{item['score']}[/{style}], "
-            f"{item['anomalies']} anomalie(s), {item['confirmed']} experimentally confirmed"
-            + (f" -> [cyan]{cycle.cycle_id}[/cyan]" if cycle else "")
-        )
-    for drift in digest.confirmed_drifts:
-        console.print(f"    [red]PROVEN[/red] [bold]{drift['agent_id']}[/bold]: {escape(drift['statement'])}")
-    console.print(
-        "\nEvidence (OSCAL assessment-results, deterministic ledger, report.md): "
-        f"[cyan]{settings.artifacts_dir}[/cyan]"
-    )
-    console.print("Next: [bold]driftlab dashboard[/bold] then open "
-                  f"http://{settings.dashboard_host}:{settings.dashboard_port}")
+def demo() -> None:
+    """Run the full E2E on the bundled seed estate (loan-officer + support-triage)."""
+    console.print("[bold]DriftLab demo — full estate cycle[/bold]")
+    summary = run_estate(force=True, no_email=True)
+    for r in summary["ran"]:
+        console.print(f"  {r['agent']}: score [bold]{r['score']}/100[/bold]")
+    console.print("\nloan-officer should be low (drifts detected + proven); "
+                  "support-triage should be 100 (clean).")
+    console.print("Artifacts in: " + str(get_settings().artifacts_dir))
 
 
-def main() -> None:  # console_scripts entry point
+def _sev_color(sev: str) -> str:
+    return {"critical": "red", "high": "yellow", "medium": "yellow",
+            "low": "blue", "info": "blue"}.get(sev, "white")
+
+
+def main() -> None:
     app()
 
 

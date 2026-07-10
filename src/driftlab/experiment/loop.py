@@ -1,196 +1,155 @@
-"""The micro-experiment loop: hypothesize -> design -> execute -> evaluate -> reflect.
+"""Micro-experiment loop — prove or refute a drift hypothesis with evidence.
 
-LangGraph StateGraph with setpoint's routing-gate pattern and regitel's
-dependency-binding-via-partial. The verdict is computed *deterministically*
-from probe evidence — CONFIRMED/REFUTED can never come from an LLM (design
-principle #1). When an LLM is configured, ``driftlab.experiment.deep_agent``
-adds an advisory DeepAgents pass on top; it can annotate, never decide.
+This is DriftLab's differentiator. Instead of merely *flagging* a suspected
+drift, the loop *proves* it: it designs a controlled probe, executes it against
+the **sandboxed replay** of the agent (never the live system), evaluates the
+evidence, and reflects on whether the claim is CONFIRMED / REFUTED /
+INCONCLUSIVE.
+
+The orchestration is a LangGraph StateGraph (design -> execute -> evaluate ->
+reflect). The verdict itself is computed deterministically from probe counts —
+no LLM is involved in the verdict. An optional advisory LLM pass (DeepAgents
+style) may enrich the narrative but cannot change a verdict.
+
+Bounded by construction: a fixed max number of probe designs and iterations.
+The sandbox is replay-only; the test suite proves the loop cannot reach the
+network.
 """
 
 from __future__ import annotations
 
-import logging
-import operator
-from functools import partial
-from typing import Annotated, Any, TypedDict
+from dataclasses import dataclass, field
+from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
-from driftlab.baseline.model import BaselinePolicy
-from driftlab.domain.models import (
-    DriftHypothesis,
-    ExperimentRecord,
-    ProbeResult,
-    Verdict,
-)
-from driftlab.experiment.probes import RATE_KINDS, design_probe, execute_probe
-from driftlab.experiment.sandbox import Sandbox
-
-logger = logging.getLogger(__name__)
+from ..domain import DecisionEvent
+from .hypothesis import ClaimKind, Hypothesis, Verdict, _build_predicate
+from .sandbox import ProbeResult, ReplaySandbox
 
 
-class ExperimentState(TypedDict, total=False):
-    hypothesis: DriftHypothesis
-    probe_spec: dict[str, Any]
-    probes: Annotated[list[ProbeResult], operator.add]
-    notes: Annotated[list[str], operator.add]
-    validity_score: float
-    verdict: str | None
-    iteration: int
-    max_iterations: int
-    min_probe_samples: int
-    confirm_threshold: float
-    refute_threshold: float
+@dataclass
+class ExperimentState:
+    hypothesis: Hypothesis | None = None
+    sandbox: ReplaySandbox | None = None
+    probe_results: list[ProbeResult] = field(default_factory=list)
+    verdict: str = ""
+    rationale: str = ""
+    iterations: int = 0
 
 
-# -- nodes ---------------------------------------------------------------------
-def design_node(state: ExperimentState) -> dict:
-    spec = design_probe(state["hypothesis"], state.get("iteration", 0))
-    return {"probe_spec": spec, "notes": [f"iteration {state.get('iteration', 0) + 1}: designed probe {spec.get('probe_kind')} (scope {spec.get('scope')})"]}
+def _design_probe(state: ExperimentState) -> dict[str, Any]:
+    # A single, well-scoped probe per hypothesis (bounded). The "design" is to
+    # materialize the replay predicate and decide the claim kind.
+    hypo = state.hypothesis
+    state.iterations += 1
+    return {"iterations": state.iterations}
 
 
-def execute_node(state: ExperimentState, *, sandbox: Sandbox, policy: BaselinePolicy) -> dict:
-    result = execute_probe(
-        sandbox=sandbox,
-        hypothesis=state["hypothesis"],
-        policy=policy,
-        probe_spec=state["probe_spec"],
+def _execute_probe(state: ExperimentState) -> dict[str, Any]:
+    hypo = state.hypothesis
+    sb = state.sandbox
+    predicate = _build_predicate(hypo.predicate_spec)
+    matched = sb.matching(predicate)
+    if hypo.kind == ClaimKind.EXISTENCE:
+        violations = len(matched)
+        res = ProbeResult(
+            probe_id=f"p{hypo.anomaly_id[-4:]}", claim=hypo.claim, kind="existence",
+            samples=len(sb.events), violations=violations,
+            detail=f"{violations} matching violation(s) in {len(sb.events)} replayed events")
+    else:  # RATE
+        decision_nodes = set(hypo.predicate_spec.get("decision_nodes", []))
+        budget = hypo.rate_threshold or 1.0
+        w = hypo.window_size or 5
+        # Walk the event stream in order; each decision-point (autonomous tool at a
+        # decision node) or human-authority event advances the sequence. Group into
+        # windows and compute autonomy rate per window.
+        seq = [e for e in sb.events
+               if (e.kind.value == "tool_call" and e.node in decision_nodes)
+               or e.kind.value in ("hitl", "refusal", "escalation")]
+        windows = [seq[i:i + w] for i in range(0, len(seq), w)] or [[]]
+        over_windows = 0
+        for win in windows:
+            auto = sum(1 for e in win if e.kind.value == "tool_call" and e.node in decision_nodes)
+            human = sum(1 for e in win if e.kind.value in ("hitl", "refusal", "escalation"))
+            tot = auto + human
+            if tot == 0:
+                continue
+            if (auto / tot) > budget:
+                over_windows += 1
+        violations = over_windows
+        res = ProbeResult(
+            probe_id=f"p{hypo.anomaly_id[-4:]}", claim=hypo.claim, kind="rate",
+            samples=len(seq), violations=violations,
+            detail=f"{over_windows}/{len(windows)} decision windows sustain excess over "
+                   f"budget {budget:.0%}")
+    return {"probe_results": [res]}
+
+
+def _evaluate(state: ExperimentState) -> dict[str, Any]:
+    hypo = state.hypothesis
+    res = state.probe_results[0]
+    if hypo.kind == ClaimKind.EXISTENCE:
+        if res.violations >= 1:
+            verdict, rationale = Verdict.CONFIRMED, (
+                f"probe reproduced the violation {res.violations}x on replay "
+                f"({res.samples} events) -> claim holds with evidence")
+        elif res.samples >= hypo.min_samples:
+            verdict, rationale = Verdict.REFUTED, (
+                f"probe examined {res.samples} events, zero violations -> claim refuted")
+        else:
+            verdict, rationale = Verdict.INCONCLUSIVE, "insufficient samples"
+    else:  # RATE
+        if res.violations == 0:
+            verdict, rationale = Verdict.REFUTED, "no window sustains the excess -> refuted"
+        elif res.violations == 1:
+            verdict, rationale = Verdict.INCONCLUSIVE, "single-window excess -> inconclusive (burst?)"
+        else:
+            verdict, rationale = Verdict.CONFIRMED, (
+                f"{res.violations} windows sustain the autonomy excess -> confirmed")
+    return {"verdict": verdict.value, "rationale": rationale}
+
+
+def _reflect(state: ExperimentState) -> dict[str, Any]:
+    # Terminal reflection is a no-op for verdict; it could attach an advisory
+    # narrative. Verdict already set in evaluate.
+    return {}
+
+
+def build_graph() -> StateGraph:
+    g = StateGraph(ExperimentState)
+    g.add_node("design", _design_probe)
+    g.add_node("execute", _execute_probe)
+    g.add_node("evaluate", _evaluate)
+    g.add_node("reflect", _reflect)
+    g.add_edge(START, "design")
+    g.add_edge("design", "execute")
+    g.add_edge("execute", "evaluate")
+    g.add_edge("evaluate", "reflect")
+    g.add_edge("reflect", END)
+    return g
+
+
+_GRAPH = build_graph().compile()
+
+
+@dataclass
+class ExperimentOutcome:
+    anomaly_id: str
+    verdict: Verdict
+    rationale: str
+    probe: ProbeResult
+
+
+def run_experiment(hypothesis: Hypothesis, events: list[DecisionEvent]) -> ExperimentOutcome:
+    """Run one hypothesis to a deterministic verdict against a replay sandbox."""
+    sandbox = ReplaySandbox(hypothesis and events[0].agent if events else "?", events)
+    state = ExperimentState(hypothesis=hypothesis, sandbox=sandbox)
+    result = _GRAPH.invoke(state)
+    res = result["probe_results"][0]
+    return ExperimentOutcome(
+        anomaly_id=hypothesis.anomaly_id,
+        verdict=Verdict(result["verdict"]),
+        rationale=result["rationale"],
+        probe=res,
     )
-    return {
-        "probes": [result],
-        "notes": [
-            f"probe {result.probe_id}: {result.violations}/{result.samples} "
-            f"violations (rate {result.violation_rate})"
-        ],
-    }
-
-
-def evaluate_node(state: ExperimentState) -> dict:
-    """Deterministic verdict from probe evidence.
-
-    Existence claims: one independently reproduced violation is proof;
-    zero violations across enough samples is refutation.
-    Rate claims: the fraction of ordered windows exceeding the budget is the
-    validity — sustained drift confirms, uniformly-within-budget refutes.
-    """
-    hypothesis = state["hypothesis"]
-    probes = state.get("probes", [])
-    last = probes[-1]
-    min_samples = state.get("min_probe_samples", 3)
-    confirm = state.get("confirm_threshold", 0.7)
-    refute = state.get("refute_threshold", 0.05)
-
-    verdict: str | None = None
-    if hypothesis.kind in RATE_KINDS:
-        validity = last.violation_rate  # fraction of windows exceeding budget
-        if last.samples >= 2:
-            if validity >= confirm:
-                verdict = Verdict.CONFIRMED.value
-            elif validity <= refute:
-                verdict = Verdict.REFUTED.value
-    else:
-        total_violations = sum(p.violations for p in probes)
-        validity = 1.0 if total_violations > 0 else 0.0
-        if total_violations > 0:
-            verdict = Verdict.CONFIRMED.value
-        elif last.samples >= min_samples:
-            verdict = Verdict.REFUTED.value
-
-    return {
-        "validity_score": round(validity, 4),
-        "verdict": verdict,
-        "iteration": state.get("iteration", 0) + 1,
-    }
-
-
-def reflect_node(state: ExperimentState) -> dict:
-    return {
-        "notes": [
-            f"inconclusive after iteration {state.get('iteration', 0)} "
-            f"(samples={state['probes'][-1].samples}); widening probe scope"
-        ]
-    }
-
-
-def route_after_evaluate(state: ExperimentState) -> str:
-    if state.get("verdict"):
-        return "done"
-    if state.get("iteration", 0) >= state.get("max_iterations", 3):
-        return "done"
-    return "reflect"
-
-
-# -- graph -----------------------------------------------------------------------
-def build_experiment_graph(*, sandbox: Sandbox, policy: BaselinePolicy):
-    graph = StateGraph(ExperimentState)
-    graph.add_node("design", design_node)
-    graph.add_node("execute", partial(execute_node, sandbox=sandbox, policy=policy))
-    graph.add_node("evaluate", evaluate_node)
-    graph.add_node("reflect", reflect_node)
-
-    graph.add_edge(START, "design")
-    graph.add_edge("design", "execute")
-    graph.add_edge("execute", "evaluate")
-    graph.add_conditional_edges("evaluate", route_after_evaluate, {"done": END, "reflect": "reflect"})
-    graph.add_edge("reflect", "design")
-    return graph.compile()
-
-
-def run_experiment(
-    hypothesis: DriftHypothesis,
-    *,
-    sandbox: Sandbox,
-    policy: BaselinePolicy,
-    max_iterations: int = 3,
-    min_probe_samples: int = 3,
-    confirm_threshold: float = 0.7,
-    refute_threshold: float = 0.05,
-) -> ExperimentRecord:
-    sandbox.assert_isolated()
-    graph = build_experiment_graph(sandbox=sandbox, policy=policy)
-    initial: ExperimentState = {
-        "hypothesis": hypothesis,
-        "iteration": 0,
-        "max_iterations": max_iterations,
-        "min_probe_samples": min_probe_samples,
-        "confirm_threshold": confirm_threshold,
-        "refute_threshold": refute_threshold,
-    }
-    recursion_limit = max(25, max_iterations * 4 + 10)
-    final = graph.invoke(initial, config={"recursion_limit": recursion_limit})
-    verdict = Verdict(final["verdict"]) if final.get("verdict") else Verdict.INCONCLUSIVE
-    return ExperimentRecord(
-        hypothesis=hypothesis,
-        verdict=verdict,
-        validity_score=float(final.get("validity_score", 0.0)),
-        iterations=int(final.get("iteration", 0)),
-        probes=list(final.get("probes", [])),
-        notes=list(final.get("notes", [])),
-    )
-
-
-def run_experiments(
-    hypotheses: list[DriftHypothesis],
-    *,
-    sandbox: Sandbox,
-    policy: BaselinePolicy,
-    **kwargs: Any,
-) -> list[ExperimentRecord]:
-    """Batch with per-item isolation (regitel batch-orchestrator contract):
-    one experiment's failure never kills the cycle."""
-    records: list[ExperimentRecord] = []
-    for hypothesis in hypotheses:
-        try:
-            records.append(run_experiment(hypothesis, sandbox=sandbox, policy=policy, **kwargs))
-        except Exception as exc:  # never propagate — record and continue
-            logger.error("experiment %s failed: %s", hypothesis.hypothesis_id, exc)
-            records.append(
-                ExperimentRecord(
-                    hypothesis=hypothesis,
-                    verdict=Verdict.INCONCLUSIVE,
-                    validity_score=0.0,
-                    iterations=0,
-                    notes=[f"experiment failed: {type(exc).__name__}: {exc}"],
-                )
-            )
-    return records

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- launchd template (regitel pattern). Install:
-       cp ops/com.driftlab.monitor.plist ~/Library/LaunchAgents/
-       launchctl load ~/Library/LaunchAgents/com.driftlab.monitor.plist
-     Adjust the driftlab binary path (`which driftlab`) and WorkingDirectory. -->
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.driftlab.monitor</string>
+  <key>Label</key>
+  <string>com.driftlab.monitor</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/bin/driftlab</string>
-    <string>monitor</string>
-    <string>run</string>
-    <string>--scheduled</string>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>cd /Users/spider/Desktop/driftlabv2 &amp;&amp; .venv/bin/driftlab monitor run --scheduled &gt;&gt; $HOME/.driftlab/monitor.log 2&gt;&amp;1</string>
   </array>
-  <key>StartCalendarInterval</key>
-  <dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer></dict>
-  <key>WorkingDirectory</key><string>/absolute/path/to/driftlab</string>
-  <key>StandardOutPath</key><string>/tmp/driftlab-monitor.log</string>
-  <key>StandardErrorPath</key><string>/tmp/driftlab-monitor.err</string>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/.driftlab/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/.driftlab/launchd.err.log</string>
 </dict>
 </plist>

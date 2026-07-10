@@ -1,0 +1,21 @@
+{
+  "agent": "support-triage",
+  "uuid": "baseline-support-triage-v1",
+  "metadata": {
+    "title": "Support Triage Agent — Certified Baseline",
+    "version": "1.0.0"
+  },
+  "props": [
+    {"name": "dl:tool-allow", "value": "classify|read_ticket"},
+    {"name": "dl:tool-allow", "value": "respond|draft_reply"},
+    {"name": "dl:route-allow", "value": "intake->classify"},
+    {"name": "dl:route-allow", "value": "classify->respond"},
+    {"name": "dl:route-allow", "value": "classify->escalate_human"},
+    {"name": "dl:hitl-when", "value": "angry|sentiment<0.2|escalate_human|Angry tickets require human"},
+    {"name": "dl:fallback-for", "value": "error|escalate_error"},
+    {"name": "dl:critical-sink", "value": "respond"},
+    {"name": "dl:autonomy-budget", "value": "0.80"},
+    {"name": "dl:decision-node", "value": "respond"},
+    {"name": "dl:required-step", "value": "classify"}
+  ]
+}

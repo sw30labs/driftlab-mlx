@@ -1,0 +1,211 @@
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 75000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 120000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 30000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 90000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 20000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 60000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 25000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 80000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 15000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 45000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 55000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 35000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 70000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 40000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 50000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 22000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 110000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 33000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 65000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 18000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 95000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 28000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 52000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 47000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 100000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 21000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 88000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 31000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "auto_approve", "amount": 60000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "route", "node": "intake", "route_from": "__start__", "route_to": "assess"}
+{"kind": "tool_call", "node": "assess", "tool": "credit_check"}
+{"kind": "tool_call", "node": "assess", "tool": "income_verify"}
+{"kind": "route", "node": "assess", "route_from": "assess", "route_to": "decide"}
+{"kind": "tool_call", "node": "decide", "tool": "approve", "amount": 40000}
+{"kind": "route", "node": "decide", "route_from": "decide", "route_to": "disburse"}
+{"kind": "tool_call", "node": "disburse", "tool": "wire_funds"}
+{"kind": "error", "node": "assess", "payload": {"error": "downstream_timeout"}}

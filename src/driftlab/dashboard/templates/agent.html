@@ -1,26 +1,42 @@
-{% extends "base.html" %}
-{% block title %}DriftLab — {{ agent.id }}{% endblock %}
-{% block content %}
-<h1>{{ agent.id }} <span class="muted">{{ agent.name }}</span></h1>
-<div class="card">
-  <div><b>Priority</b> P{{ agent.priority }} · <b>Status</b> {{ agent.status }} · <b>Last checked</b> {{ agent.last_checked_at or "never" }}</div>
-  <div class="muted">{{ agent.description }}</div>
-  <div class="muted">baseline: <code>{{ agent.baseline_path }}</code> · traces: <code>{{ agent.traces_path }}</code></div>
-</div>
-
-<h2>Cycle history</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DriftLab — {{ agent }}</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 2rem; color: #1f2328; }
+  h1 { font-size: 1.4rem; }
+  .score { font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; color: #fff; }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #d0d7de; font-size: 0.9rem; }
+  th { background: #f6f8fa; }
+  .sev-CRITICAL { color: #cf222e; font-weight: 700; }
+  .sev-HIGH { color: #bf8700; font-weight: 700; }
+  .back { color: #0969da; text-decoration: none; }
+</style></head>
+<body>
+<p><a class="back" href="/">← estate</a></p>
+<h1>{{ agent }} — score <span class="score" style="background:{{ color(score) }}">{{ score }}</span></h1>
+<p>Cycle <code>{{ ledger.cycle_id }}</code></p>
+<h2>Findings</h2>
 <table>
-  <tr><th>Cycle</th><th>Finished</th><th>Score</th><th>Anomalies</th><th>Experiments</th><th>Confirmed</th><th>Trigger</th></tr>
-  {% for cycle in cycles %}
-  <tr>
-    <td><a href="/cycles/{{ cycle.cycle_id }}"><code>{{ cycle.cycle_id }}</code></a></td>
-    <td class="muted">{{ cycle.finished_at }}</td>
-    <td><span class="score {{ score_class(cycle.compliance_score) }}">{{ cycle.compliance_score }}</span></td>
-    <td>{{ cycle.anomaly_count }}</td>
-    <td>{{ cycle.experiment_count }}</td>
-    <td>{% if cycle.confirmed_drifts %}<span class="badge critical">{{ cycle.confirmed_drifts }}</span>{% else %}0{% endif %}</td>
-    <td class="muted">{{ cycle.trigger }}</td>
-  </tr>
+  <thead><tr><th>Control</th><th>Severity</th><th>Title</th><th>Waived</th></tr></thead>
+  <tbody>
+  {% for a in ledger.anomalies %}
+    <tr>
+      <td>{{ a.control }}</td>
+      <td class="sev-{{ a.severity }}">{{ a.severity }}</td>
+      <td>{{ a.title }}</td>
+      <td>{% if a.waived %}yes{% else %}no{% endif %}</td>
+    </tr>
   {% endfor %}
+  </tbody>
 </table>
-{% endblock %}
+<h2>Experiment verdicts</h2>
+<table>
+  <thead><tr><th>Control</th><th>Verdict</th><th>Rationale</th></tr></thead>
+  <tbody>
+  {% for e in ledger.experiments %}
+    <tr><td>{{ e.control }}</td><td>{{ e.verdict }}</td><td>{{ e.rationale }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</body></html>
