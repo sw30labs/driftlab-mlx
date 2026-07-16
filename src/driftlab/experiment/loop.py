@@ -24,6 +24,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 
 from ..domain import DecisionEvent
+from ..sensor import Sensor
 from .hypothesis import ClaimKind, Hypothesis, Verdict, _build_predicate
 from .sandbox import ProbeResult, ReplaySandbox
 
@@ -183,7 +184,14 @@ def run_experiment(
     sandbox = ReplaySandbox(hypothesis and events[0].agent if events else "?", events)
     state = ExperimentState(hypothesis=hypothesis, sandbox=sandbox,
                             resource_records=resource_records or [])
-    result = _GRAPH.invoke(state)
+    # Dogfood (ADR-001): the proof engine runs under the same telemetry
+    # discipline it audits. Observe-only — no ceilings here, because a
+    # CPU/wall breaker would make compliance verdicts machine-speed-
+    # dependent; the telemetry plane never touches the deterministic
+    # artifacts.
+    sensor = Sensor("driftlab-experiment")
+    with sensor.iteration(control=hypothesis.control, anomaly=hypothesis.anomaly_id):
+        result = _GRAPH.invoke(state)
     res = result["probe_results"][0]
     return ExperimentOutcome(
         anomaly_id=hypothesis.anomaly_id,

@@ -175,6 +175,15 @@ def test_sensor_wall_budget_accrues_across_iterations(tmp_path):
     assert excinfo.value.currency is Currency.WALL_SECONDS
 
 
+def test_iteration_payload_attribution(tmp_path):
+    path = tmp_path / "r.jsonl"
+    sensor = Sensor("demo", stream_path=path, wall_clock=FakeClock(), timestamp=lambda: 0.0)
+    with sensor.iteration(control="DL-8", anomaly="a1"):
+        pass
+    record = load_resource_jsonl(path)[0]
+    assert record.payload == {"event": "iteration", "control": "DL-8", "anomaly": "a1"}
+
+
 def test_sensor_records_survive_body_crash(tmp_path):
     path = tmp_path / "r.jsonl"
     sensor = Sensor("demo", stream_path=path, wall_clock=FakeClock(), timestamp=lambda: 0.0)

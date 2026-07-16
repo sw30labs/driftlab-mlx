@@ -40,6 +40,23 @@ def test_experiment_confirms_drifts():
     assert all(o.verdict == Verdict.CONFIRMED for o in outcomes)
 
 
+def test_experiment_loop_emits_own_telemetry():
+    # Dogfood (ADR-001): the proof engine records its own resource telemetry
+    # under the isolated data dir — observe-only, never in the artifacts.
+    from driftlab.config import get_settings
+    from driftlab.sensor import load_resource_jsonl
+
+    policy, events, records, anoms = _anomalies("loan-officer")
+    anomaly = next(a for a in anoms if not a.waived)
+    run_experiment(generate(anomaly, policy), events, resource_records=records)
+    stream = get_settings().data_dir / "resource" / "driftlab-experiment.jsonl"
+    assert stream.exists()
+    recs = load_resource_jsonl(stream)
+    assert recs[-1].spent["iterations"] >= 1.0
+    assert recs[-1].payload["control"] == anomaly.control
+    assert recs[-1].payload["anomaly"] == anomaly.id
+
+
 def test_experiment_refutes_on_clean_trace():
     # Re-run the loan-officer hypotheses against the CLEAN support trace +
     # support's clean resource stream (never crosses loan's token ceiling).

@@ -303,13 +303,15 @@ class Sensor:
         return record
 
     @contextmanager
-    def iteration(self) -> Iterator[BudgetLedger]:
+    def iteration(self, **payload: Any) -> Iterator[BudgetLedger]:
         """Meter one work-loop iteration; trip the breaker when a ceiling is spent.
 
-        A blocked attempt still emits a final record naming the tripped
-        currency — the stream must show *why* the loop stopped — then raises.
-        A crashing iteration body likewise gets its record before the
-        exception propagates.
+        ``payload`` keys are merged into the emitted record for attribution
+        (e.g. ``iteration(control="DL-8")``; ``event`` is reserved). A blocked
+        attempt still emits a final record naming the tripped currency — the
+        stream must show *why* the loop stopped — then raises. A crashing
+        iteration body likewise gets its record before the exception
+        propagates.
         """
         try:
             self.ledger.checkpoint()
@@ -323,7 +325,7 @@ class Sensor:
             cpu, wall = self._meter.delta()
             self.ledger.charge(Currency.CPU_SECONDS, cpu)
             self.ledger.charge(Currency.WALL_SECONDS, wall)
-            self._emit(event="iteration")
+            self._emit(event="iteration", **payload)
 
 
 __all__ = [

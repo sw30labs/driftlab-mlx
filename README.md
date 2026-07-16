@@ -134,7 +134,7 @@ driftlab/
 │   └── cli.py         Typer + Rich CLI
 ├── seed/              baselines, agents.yaml, recorded traces
 ├── ops/               launchd plist + crontab templates
-├── tests/             22 tests (unit, integration, determinism, sandbox-safety, LLM-optional)
+├── tests/             51 tests (unit, integration, determinism, sandbox-safety, LLM-optional, sensor + DL-8)
 └── docs/              RUNBOOK, CERTIFICATION-GUIDE, PITCH, deck, ROADMAP
 ```
 
