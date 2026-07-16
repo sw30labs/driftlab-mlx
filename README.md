@@ -118,6 +118,7 @@ driftlab/
 │   ├── domain/        canonical DecisionEvent + BaselinePolicy models
 │   ├── identity.py    content-derived, deterministic ids + digests
 │   ├── ingest/        normalizer (fail-closed), JSONL replay, LangGraph hook
+│   ├── sensor/        resource-budget ledger + meter + telemetry stream (ADR-001)
 │   ├── baseline/      OSCAL profile loader + fail-closed compiler (DL-1..7)
 │   ├── diff/          behavioral diff engine (7 deterministic control checks)
 │   ├── anomaly/       severity resolution, waivers, scoring, DL-5 escalation
