@@ -1,12 +1,18 @@
-__pycache__/
-*.pyc
-.venv/
-venv/
-.driftlab/
-*.sqlite3
-.pytest_cache/
-dist/
-build/
-*.egg-info/
+# secrets / local config
 .env
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# build & test artifacts
+dist/
+.pytest_cache/
+
+# local runtime data (SQLite DB, cycle artifacts)
+.driftlab/
+
+# macOS
 .DS_Store

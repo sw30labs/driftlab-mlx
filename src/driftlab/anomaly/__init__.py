@@ -25,7 +25,7 @@ SEVERITY_WEIGHT = {
     Severity.INFO: 1,
 }
 
-# Severity can be escalated by control semantics (e.g. DL-5 critical sink).
+# Severity can be escalated by control semantics (e.g. DL-5 critical sink).( Shall I challenge this ?)
 _CONTROL_BASE_SEVERITY = {
     "DL-1": Severity.HIGH,
     "DL-2": Severity.MEDIUM,

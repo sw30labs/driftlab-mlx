@@ -63,9 +63,9 @@ class DecisionEvent(BaseModel):
         return self.kind not in (EventKind.HITL, EventKind.REFUSAL, EventKind.ESCALATION)
 
 
-# ---------------------------------------------------------------------------
-# Baseline (certified OSCAL-derived) control model
-# ---------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
+# Baseline (certified OSCAL-derived) control model - Thinking in moving it to a YAML .. why not ...
+# --------------------------------------------------------------------------------------------------
 
 
 class Severity(str, Enum):

@@ -162,7 +162,7 @@ class BehavioralDiff:
     # when a finding's evidence reaches a certified critical sink, its severity
     # is escalated toward CRITICAL. DL-5 therefore never emits its own finding;
     # it amplifies the severity of genuine violations that touch irreversible
-    # actions (disburse, respond, ...).
+    # actions (disburse, respond, ...) - This needs to be perfected I think.
 
     # -- DL-6 autonomy budget ---------------------------------------------
     def check_dl6_autonomy(self) -> list[RawFinding]:
