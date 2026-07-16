@@ -82,12 +82,31 @@ def _last_cycle(agent_id: str) -> str | None:
         return rec.last_cycle if rec else None
 
 
+def load_agent_resources(a: AgentSpec, seed_root: Path, settings) -> list | None:
+    """Resolve an agent's recorded resource stream (DL-8 telemetry plane).
+
+    Registry-declared streams must exist — a declared-but-missing stream
+    raises (fail closed, evidence must never silently vanish). Without a
+    registry entry, the live sensor default path is picked up when present.
+    """
+    from ..sensor import load_resource_jsonl
+
+    if a.resource:
+        return load_resource_jsonl(_resolve(a.resource, seed_root))
+    live = settings.data_dir / "resource" / f"{a.id}.jsonl"
+    if live.exists():
+        return load_resource_jsonl(live)
+    return None
+
+
 def _run_one(a: AgentSpec, settings, run_experiments: bool) -> dict[str, Any]:
     seed_root = Path(__file__).resolve().parent.parent / "seed"
     baseline_path = _resolve(a.baseline, seed_root)
     trace_path = _resolve(a.trace, seed_root)
     events = load_jsonl(trace_path, a.id)
-    result = run_cycle(a.id, str(baseline_path), events, run_experiments=run_experiments)
+    resource_records = load_agent_resources(a, seed_root, settings)
+    result = run_cycle(a.id, str(baseline_path), events, run_experiments=run_experiments,
+                       resource_records=resource_records)
 
     out_dir = settings.artifacts_dir / a.id / result.cycle_id
     emit_assessment_plan(a.id, _policy_for(baseline_path), out_dir)

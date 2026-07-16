@@ -67,10 +67,13 @@ def check(
         console.print(f"[red]unknown agent {agent!r}[/red]")
         raise typer.Exit(1)
     a = regs[agent]
-    events = load_jsonl(seed / a.trace, agent)
-    result = run_cycle(agent, str(seed / a.baseline), events,
-                       run_experiments=not no_experiments)
     settings = get_settings()
+    events = load_jsonl(seed / a.trace, agent)
+    from .monitor.runner import load_agent_resources
+    resource_records = load_agent_resources(a, seed, settings)
+    result = run_cycle(agent, str(seed / a.baseline), events,
+                       run_experiments=not no_experiments,
+                       resource_records=resource_records)
     settings.ensure_dirs()
     out_dir = settings.artifacts_dir / agent / result.cycle_id
     emit_report(agent, result, out_dir)

@@ -5,7 +5,7 @@ concrete probe spec. The experiment loop later executes the probe against the
 replay sandbox and returns a deterministic verdict (CONFIRMED / REFUTED /
 INCONCLUSIVE).
 
-Two claim shapes:
+Three claim shapes:
 
 * **Existence** (DL-1, DL-2, DL-3, DL-4, DL-5) — "an unauthorized X occurred".
   One independently reproduced violation is proof; zero violations across
@@ -13,6 +13,10 @@ Two claim shapes:
 * **Rate** (DL-6) — "autonomy exceeds budget". Decisions are split into ordered
   windows; drift confirms only when windows *sustain* the excess (a one-off
   burst stays INCONCLUSIVE).
+* **Resource** (DL-8) — "cumulative spend crossed the certified ceiling". The
+  probe replays the recorded resource stream (telemetry plane, ADR-001): a
+  record over the ceiling confirms; a full stream that never crosses refutes;
+  an absent stream is INCONCLUSIVE by construction.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ from ..domain import BaselinePolicy
 class ClaimKind(str, Enum):
     EXISTENCE = "existence"
     RATE = "rate"
+    RESOURCE = "resource"
 
 
 class Verdict(str, Enum):
@@ -124,6 +129,22 @@ def generate(anomaly: Anomaly, policy: BaselinePolicy) -> Hypothesis:
             ClaimKind.RATE,
             {"match": "autonomy_excess", "decision_nodes": list(policy.decision_nodes)},
             window_size=5, rate_threshold=extra["budget"])
+    if c == "DL-8":
+        extra = anomaly.extra
+        if "currency" in extra:  # ceiling breach
+            return Hypothesis(
+                anomaly.id, c,
+                f"{extra['currency']} spend {extra['spent']:g} crossed certified "
+                f"ceiling {extra['ceiling']:g}",
+                ClaimKind.RESOURCE,
+                {"match": "resource_over_ceiling", "currency": extra["currency"],
+                 "ceiling": extra["ceiling"]}, min_samples=1)
+        # telemetry missing — probe the (absent) stream; INCONCLUSIVE by construction
+        return Hypothesis(
+            anomaly.id, c, "certified resource ceilings have no observed telemetry",
+            ClaimKind.RESOURCE,
+            {"match": "resource_over_ceiling", "currency": None, "ceiling": None},
+            min_samples=1)
     # DL-5 escalations and DL-7 are not independently probed here.
     return Hypothesis(
         anomaly.id, c, anomaly.title, ClaimKind.EXISTENCE,

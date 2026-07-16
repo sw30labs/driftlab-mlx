@@ -1,8 +1,12 @@
 """Behavioral diff engine — observed DecisionEvent stream vs certified baseline.
 
-Pure deterministic Python. Each of the seven DL controls is checked
+Pure deterministic Python. Each of the eight DL controls is checked
 independently; the result is a list of raw findings (control id, evidence,
 candidate severity). The anomaly engine turns these into scored anomalies.
+
+DL-8 audits the *resource telemetry plane* (a recorded stream of sensor
+ResourceRecords, separate from the decision trace — see ADR-001): replaying
+the same stream against the same baseline yields identical findings.
 
 The engine also builds a NetworkX behavior graph for path/route analysis and
 for critical-sink reachability (DL-5 escalation).
@@ -17,11 +21,12 @@ from typing import Any
 import networkx as nx
 
 from ..domain import BaselinePolicy, DecisionEvent
+from ..sensor import ResourceRecord, cumulative_spend
 
 
 @dataclass
 class RawFinding:
-    control: str  # DL-1..7
+    control: str  # DL-1..8
     title: str
     detail: str
     evidence: list[str]  # event ids (DERIVED_FROM provenance)
@@ -48,9 +53,15 @@ def _eval_condition(cond: str, ev: DecisionEvent) -> bool:
 
 
 class BehavioralDiff:
-    def __init__(self, policy: BaselinePolicy, events: list[DecisionEvent]):
+    def __init__(
+        self,
+        policy: BaselinePolicy,
+        events: list[DecisionEvent],
+        resource_records: list[ResourceRecord] | None = None,
+    ):
         self.policy = policy
         self.events = events
+        self.resource_records = resource_records
         self.graph = self._build_graph()
 
     # -- graph -------------------------------------------------------------
@@ -70,6 +81,7 @@ class BehavioralDiff:
         findings += self.check_dl4_fallback()
         findings += self.check_dl6_autonomy()
         findings += self.check_dl7_required_steps()
+        findings += self.check_dl8_resource_budget()
         return findings
 
     # -- DL-1 decision rights ---------------------------------------------
@@ -193,6 +205,46 @@ class BehavioralDiff:
                 {"rate": rate, "budget": self.policy.autonomy_budget,
                  "autonomous": autonomous, "total": total})]
         return []
+
+    # -- DL-8 resource budget ---------------------------------------------
+    def check_dl8_resource_budget(self) -> list[RawFinding]:
+        # Certified ceilings vs the recorded resource stream (telemetry
+        # plane). Fail-closed: certify -> must observe. Evidence ids are
+        # ResourceRecord ids; DL-5 escalation skips them (not decision events).
+        ceilings = self.policy.resource_ceilings
+        if not ceilings:
+            return []
+        records = self.resource_records
+        if not records:
+            return [RawFinding(
+                "DL-8", "Resource telemetry missing",
+                f"baseline certifies resource ceilings for {sorted(ceilings)} "
+                f"but no resource stream was observed this cycle",
+                [], "medium",
+                {"ceilings": dict(sorted(ceilings.items())), "records": 0})]
+        final = cumulative_spend(records)
+        breaker_fired = any(r.tripped for r in records)
+        out: list[RawFinding] = []
+        for cur in sorted(ceilings):
+            ceiling = ceilings[cur]
+            spent = final.get(cur, 0.0)
+            if spent > ceiling:
+                evidence = [
+                    r.id for r in records if float(r.spent.get(cur, 0.0)) > ceiling
+                ]
+                mechanism = (
+                    "sensor breaker fired; overshoot occurred within the final "
+                    "metered iteration(s)" if breaker_fired
+                    else "sensor breaker never fired"
+                )
+                out.append(RawFinding(
+                    "DL-8", "Resource budget exceeded",
+                    f"{cur} spent {spent:g} exceeds certified ceiling "
+                    f"{ceiling:g} ({mechanism})",
+                    evidence, "high",
+                    {"currency": cur, "spent": spent, "ceiling": ceiling,
+                     "records": len(records), "breaker_fired": breaker_fired}))
+        return out
 
     # -- DL-7 required steps ----------------------------------------------
     def check_dl7_required_steps(self) -> list[RawFinding]:

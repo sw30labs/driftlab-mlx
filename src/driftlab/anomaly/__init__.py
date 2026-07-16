@@ -34,6 +34,9 @@ _CONTROL_BASE_SEVERITY = {
     "DL-5": Severity.CRITICAL,
     "DL-6": Severity.HIGH,
     "DL-7": Severity.MEDIUM,
+    # DL-8 base is MEDIUM so "telemetry missing" lands MEDIUM; an actual
+    # ceiling breach carries a "high" hint, which wins upward.
+    "DL-8": Severity.MEDIUM,
 }
 
 

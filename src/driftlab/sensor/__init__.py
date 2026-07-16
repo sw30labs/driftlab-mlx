@@ -219,6 +219,21 @@ class ResourceStreamWriter:
             fh.write(line + "\n")
 
 
+def cumulative_spend(records: list[ResourceRecord]) -> dict[str, float]:
+    """Final cumulative spend per currency over a recorded stream.
+
+    Uses max, not last — cumulative spend is monotone, so this is robust to
+    out-of-order or truncated streams.
+    """
+    final: dict[str, float] = {}
+    for r in records:
+        for cur, amt in r.spent.items():
+            a = float(amt)
+            if a > final.get(cur, 0.0):
+                final[cur] = a
+    return final
+
+
 def load_resource_jsonl(path: str | Path) -> list[ResourceRecord]:
     """Replay a recorded resource stream (the phase-2 DL-8 audit input)."""
     p = Path(path)
@@ -319,5 +334,6 @@ __all__ = [
     "ResourceRecord",
     "ResourceStreamWriter",
     "Sensor",
+    "cumulative_spend",
     "load_resource_jsonl",
 ]

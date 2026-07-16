@@ -32,6 +32,9 @@ from .sandbox import ProbeResult, ReplaySandbox
 class ExperimentState:
     hypothesis: Hypothesis | None = None
     sandbox: ReplaySandbox | None = None
+    # Recorded resource stream for RESOURCE (DL-8) claims — replay-only, like
+    # the event sandbox; the loop never reads live telemetry.
+    resource_records: list = field(default_factory=list)
     probe_results: list[ProbeResult] = field(default_factory=list)
     verdict: str = ""
     rationale: str = ""
@@ -49,9 +52,26 @@ def _design_probe(state: ExperimentState) -> dict[str, Any]:
 def _execute_probe(state: ExperimentState) -> dict[str, Any]:
     hypo = state.hypothesis
     sb = state.sandbox
-    predicate = _build_predicate(hypo.predicate_spec)
-    matched = sb.matching(predicate)
+    if hypo.kind == ClaimKind.RESOURCE:
+        records = state.resource_records or []
+        currency = hypo.predicate_spec.get("currency")
+        ceiling = hypo.predicate_spec.get("ceiling")
+        if currency is None or ceiling is None:
+            res = ProbeResult(
+                probe_id=f"p{hypo.anomaly_id[-4:]}", claim=hypo.claim, kind="resource",
+                samples=len(records), violations=0,
+                detail=f"{len(records)} resource record(s) available for certified ceilings")
+        else:
+            over = [r for r in records if float(r.spent.get(currency, 0.0)) > float(ceiling)]
+            res = ProbeResult(
+                probe_id=f"p{hypo.anomaly_id[-4:]}", claim=hypo.claim, kind="resource",
+                samples=len(records), violations=len(over),
+                detail=f"{len(over)}/{len(records)} replayed resource records show "
+                       f"{currency} over ceiling {float(ceiling):g}")
+        return {"probe_results": [res]}
     if hypo.kind == ClaimKind.EXISTENCE:
+        predicate = _build_predicate(hypo.predicate_spec)
+        matched = sb.matching(predicate)
         violations = len(matched)
         res = ProbeResult(
             probe_id=f"p{hypo.anomaly_id[-4:]}", claim=hypo.claim, kind="existence",
@@ -99,6 +119,19 @@ def _evaluate(state: ExperimentState) -> dict[str, Any]:
                 f"probe examined {res.samples} events, zero violations -> claim refuted")
         else:
             verdict, rationale = Verdict.INCONCLUSIVE, "insufficient samples"
+    elif hypo.kind == ClaimKind.RESOURCE:
+        if res.samples == 0:
+            verdict, rationale = Verdict.INCONCLUSIVE, (
+                "no resource telemetry available to examine -> cannot verify the "
+                "certified budget either way")
+        elif res.violations >= 1:
+            verdict, rationale = Verdict.CONFIRMED, (
+                f"replayed stream shows {res.violations} record(s) with spend over "
+                f"the certified ceiling -> breach holds with evidence")
+        else:
+            verdict, rationale = Verdict.REFUTED, (
+                f"replayed stream ({res.samples} records) never crosses the "
+                f"ceiling -> claim refuted")
     else:  # RATE
         if res.violations == 0:
             verdict, rationale = Verdict.REFUTED, "no window sustains the excess -> refuted"
@@ -141,10 +174,15 @@ class ExperimentOutcome:
     probe: ProbeResult
 
 
-def run_experiment(hypothesis: Hypothesis, events: list[DecisionEvent]) -> ExperimentOutcome:
+def run_experiment(
+    hypothesis: Hypothesis,
+    events: list[DecisionEvent],
+    resource_records: list | None = None,
+) -> ExperimentOutcome:
     """Run one hypothesis to a deterministic verdict against a replay sandbox."""
     sandbox = ReplaySandbox(hypothesis and events[0].agent if events else "?", events)
-    state = ExperimentState(hypothesis=hypothesis, sandbox=sandbox)
+    state = ExperimentState(hypothesis=hypothesis, sandbox=sandbox,
+                            resource_records=resource_records or [])
     result = _GRAPH.invoke(state)
     res = result["probe_results"][0]
     return ExperimentOutcome(
