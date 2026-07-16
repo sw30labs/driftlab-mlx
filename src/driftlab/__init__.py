@@ -8,4 +8,4 @@ The compliance path (diff, anomaly, scoring, experiment verdicts) is fully
 deterministic and pure-Python. The LLM layer is optional and advisory-only.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
