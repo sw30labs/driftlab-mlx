@@ -69,7 +69,7 @@ Three forces converge in 2026:
 
 ```
 Agent runtime → DecisionEvent stream ─┐
-OSCAL baseline → Control model (DL-1..7) ─┤
+OSCAL baseline → Control model (DL-1..8) ─┤
                                         ▼
                         Behavioral Diff (deterministic)
                                         ▼

@@ -58,7 +58,7 @@ Expected output:
 
 ```
 DriftLab demo — full estate cycle
-  loan-officer: score 0/100       <- 4 drift families detected + proven
+  loan-officer: score 0/100       <- 5 drift families detected + proven
   support-triage: score 100/100   <- clean
 ```
 
@@ -92,9 +92,11 @@ uv run driftlab dashboard --port 8321    # open http://127.0.0.1:8321
 ```
 Agent runtime (LangGraph/LangChain/any)
    │  emits decision traces (tool calls, routing, escalations, refusals)
+   │  + resource telemetry via driftlab.sensor (separate stream; ADR-001)
    ▼
 [Trace Ingestor] ──► [Trace Normalizer] ──► canonical DecisionEvent model
-[OSCAL Baseline Loader] ──► [Baseline Compiler] ──► canonical Control model (DL-1..7)
+[Resource Stream Loader] ──► ResourceRecord replay (DL-8 telemetry plane)
+[OSCAL Baseline Loader] ──► [Baseline Compiler] ──► canonical Control model (DL-1..8)
                               │
               ┌───────────────┴───────────────┐
               ▼                               ▼
@@ -119,7 +121,7 @@ driftlab/
 │   ├── identity.py    content-derived, deterministic ids + digests
 │   ├── ingest/        normalizer (fail-closed), JSONL replay, LangGraph hook
 │   ├── sensor/        resource-budget ledger + meter + telemetry stream (ADR-001)
-│   ├── baseline/      OSCAL profile loader + fail-closed compiler (DL-1..7)
+│   ├── baseline/      OSCAL profile loader + fail-closed compiler (DL-1..8)
 │   ├── diff/          behavioral diff engine (7 deterministic control checks)
 │   ├── anomaly/       severity resolution, waivers, scoring, DL-5 escalation
 │   ├── experiment/    hypothesis generator + sandboxed replay + loop (LangGraph)
@@ -138,7 +140,7 @@ driftlab/
 
 ---
 
-## The seven behavioral controls (DL-1..7)
+## The eight behavioral controls (DL-1..8)
 
 | ID | Control | NIST 800-53 | What it checks |
 |---|---|---|---|
@@ -149,8 +151,11 @@ driftlab/
 | DL-5 | Critical Sink | AC-6 / SC-2 | Findings reaching irreversible actions are escalated to CRITICAL |
 | DL-6 | Autonomy Budget | AC-5 / PM-12 | Autonomous disposition rate stays under the certified ceiling |
 | DL-7 | Required Steps | CM-6 | Mandatory process steps (e.g. intake→assess) are present |
+| DL-8 | Resource Budget | SC-6 / CA-7 | Cumulative resource spend (tokens, iterations, CPU, wall) stays under certified ceilings |
 
-All seven are evaluated **deterministically**; none depend on an LLM.
+All eight are evaluated **deterministically**; none depend on an LLM. DL-8
+audits the sensor's recorded telemetry stream (see `docs/ADR-001-RESOURCE-BUDGET.md`);
+certified ceilings with no observed telemetry fail closed as a finding.
 
 ---
 

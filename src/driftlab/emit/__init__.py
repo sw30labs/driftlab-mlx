@@ -50,7 +50,8 @@ def emit_assessment_plan(agent: str, policy: BaselinePolicy, out_dir: Path) -> P
                     "uuid": "method-driftlab-behavioral",
                     "type": "automated-test",
                     "description": "Continuous behavioral diff of observed decision traces "
-                                   "against the certified baseline (DL-1..7).",
+                                   "and resource telemetry against the certified baseline "
+                                   "(DL-1..8).",
                 }]
             },
             "assessment-activities": {
@@ -139,6 +140,18 @@ def emit_report(agent: str, result: CycleResult, out_dir: Path) -> Path:
         for a in active:
             v = (exp_by_anom.get(a.id) or {}).get("verdict", "—")
             lines.append(f"| {a.control} | {a.severity.value.upper()} | {a.title} | {v} |")
+    if result.resource_summary is not None:
+        rs = result.resource_summary
+        lines.append("")
+        lines.append("## Resource budget (DL-8)")
+        lines.append("")
+        lines.append(f"- Records: {rs['records']} · Breaker fired: "
+                     f"{'yes' if rs['breaker_fired'] else 'no'} · Fidelity: "
+                     f"{', '.join(rs['fidelity_observed']) or '—'}")
+        for cur, ceiling in rs["ceilings"].items():
+            spent = rs["spent"].get(cur, 0.0)
+            flag = "  **EXCEEDED**" if spent > ceiling else ""
+            lines.append(f"- {cur}: {spent:g} / {ceiling:g}{flag}")
     lines.append("")
     lines.append("## Experiment evidence")
     lines.append("")
