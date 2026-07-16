@@ -116,6 +116,9 @@ class BaselinePolicy(BaseModel):
     decision_nodes: list[str] = Field(default_factory=list)
     # DL-7 required steps: nodes that must appear in every cycle's trace
     required_steps: list[str] = Field(default_factory=list)
+    # DL-8 resource budget: certified per-currency ceilings (currency names are
+    # the driftlab.sensor Currency values; see ADR-001)
+    resource_ceilings: dict[str, float] = Field(default_factory=dict)
 
     def digest(self) -> str:
         return stable_json_digest(self.model_dump(mode="json"))

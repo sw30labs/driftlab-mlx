@@ -3,7 +3,7 @@
   "uuid": "baseline-loan-officer-v1",
   "metadata": {
     "title": "Loan Officer Agent — Certified Baseline",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "props": [
     {"name": "dl:tool-allow", "value": "assess|credit_check,income_verify"},
@@ -19,6 +19,8 @@
     {"name": "dl:critical-sink", "value": "disburse"},
     {"name": "dl:autonomy-budget", "value": "0.40"},
     {"name": "dl:decision-node", "value": "decide"},
-    {"name": "dl:required-step", "value": "assess"}
+    {"name": "dl:required-step", "value": "assess"},
+    {"name": "dl:resource-budget", "value": "tokens|120000"},
+    {"name": "dl:resource-budget", "value": "iterations|40"}
   ]
 }

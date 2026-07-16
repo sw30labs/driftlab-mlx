@@ -2,8 +2,8 @@
   "catalog": {
     "uuid": "driftlab-catalog-v1",
     "metadata": {
-      "title": "DriftLab Behavioral Control Catalog (DL-1..7)",
-      "version": "1.0.0",
+      "title": "DriftLab Behavioral Control Catalog (DL-1..8)",
+      "version": "1.1.0",
       "osp-800-53-crosswalk": true
     },
     "groups": [
@@ -17,7 +17,8 @@
           {"id": "DL-4", "title": "Fallback protocols", "class": "technical", "nist": ["SI-4", "IR-4"]},
           {"id": "DL-5", "title": "Critical sinks", "class": "technical", "nist": ["AC-6(1)", "CM-5"]},
           {"id": "DL-6", "title": "Autonomy budget", "class": "technical", "nist": ["AC-6", "CA-7"]},
-          {"id": "DL-7", "title": "Required steps + continuous trace evidence", "class": "technical", "nist": ["AU-2", "AU-12", "CA-7"]}
+          {"id": "DL-7", "title": "Required steps + continuous trace evidence", "class": "technical", "nist": ["AU-2", "AU-12", "CA-7"]},
+          {"id": "DL-8", "title": "Resource budget", "class": "technical", "nist": ["SC-6", "CA-7"]}
         ]
       }
     ]
