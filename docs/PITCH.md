@@ -40,7 +40,7 @@ agentic systems**. It:
 - taps an agent's runtime decision traces (tool calls, routing, escalations,
   refusals) and normalizes them into a canonical `DecisionEvent` model;
 - diffs them, deterministically, against a certified OSCAL baseline across
-  **seven behavioral controls** (decision rights, routing, human oversight,
+  **eight behavioral controls** (decision rights, routing, human oversight,
   fallback, critical sinks, autonomy budget, required steps);
 - scores compliance (0–100) and emits an anomaly ledger with full provenance;
 - and — uniquely — runs a **micro-experiment loop** that *proves or refutes*

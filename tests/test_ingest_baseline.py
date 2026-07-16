@@ -54,3 +54,34 @@ def test_compile_success_produces_policy():
     assert policy.autonomy_budget == 0.40
     assert policy.tool_allowlist["decide"] == ["approve", "decline"]
     assert policy.baseline_hash
+
+
+def test_compile_resource_ceilings():
+    profile = load_profile(SEED / "baselines" / "loan-officer-baseline.json")
+    policy = BaselineCompiler().compile(profile)
+    assert policy.resource_ceilings == {"tokens": 120000.0, "iterations": 40.0}
+    assert any(c.id == "DL-8" for c in policy.controls)
+
+
+def test_compile_fail_closed_on_unknown_resource_currency():
+    profile = load_profile(SEED / "baselines" / "support-triage-baseline.json")
+    profile.props.append({"name": "dl:resource-budget", "value": "parsecs|12"})
+    with pytest.raises(CompileError):
+        BaselineCompiler().compile(profile)
+
+
+def test_compile_fail_closed_on_bad_resource_ceiling():
+    profile = load_profile(SEED / "baselines" / "support-triage-baseline.json")
+    profile.props.append({"name": "dl:resource-budget", "value": "cpu_seconds|lots"})
+    with pytest.raises(CompileError):
+        BaselineCompiler().compile(profile)
+    profile.props[-1] = {"name": "dl:resource-budget", "value": "cpu_seconds|0"}
+    with pytest.raises(CompileError):
+        BaselineCompiler().compile(profile)
+
+
+def test_compile_fail_closed_on_duplicate_resource_currency():
+    profile = load_profile(SEED / "baselines" / "support-triage-baseline.json")
+    profile.props.append({"name": "dl:resource-budget", "value": "tokens|99"})
+    with pytest.raises(CompileError):
+        BaselineCompiler().compile(profile)

@@ -3,7 +3,7 @@
   "uuid": "baseline-support-triage-v1",
   "metadata": {
     "title": "Support Triage Agent — Certified Baseline",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "props": [
     {"name": "dl:tool-allow", "value": "classify|read_ticket"},
@@ -16,6 +16,8 @@
     {"name": "dl:critical-sink", "value": "respond"},
     {"name": "dl:autonomy-budget", "value": "0.80"},
     {"name": "dl:decision-node", "value": "respond"},
-    {"name": "dl:required-step", "value": "classify"}
+    {"name": "dl:required-step", "value": "classify"},
+    {"name": "dl:resource-budget", "value": "tokens|150000"},
+    {"name": "dl:resource-budget", "value": "iterations|60"}
   ]
 }

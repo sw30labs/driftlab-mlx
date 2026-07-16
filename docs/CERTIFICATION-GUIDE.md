@@ -9,13 +9,13 @@ shows compliance/security teams how to author one.
 ## 1. Mental model
 
 The baseline is an **OSCAL profile** that imports the DriftLab **catalog**
-(`seed/baselines/driftlab-catalog.json`, controls DL-1..7) and *sets the
+(`seed/baselines/driftlab-catalog.json`, controls DL-1..8) and *sets the
 parameters* for the agent via `props` namespaced `dl:`.
 
-You are not writing OSCAL control text — you are *configuring* the seven
+You are not writing OSCAL control text — you are *configuring* the eight
 behavioral controls for one agent. That is the whole job.
 
-## 2. The seven controls and their parameters
+## 2. The eight controls and their parameters
 
 | Control | `dl:` prop(s) | Meaning |
 |---|---|---|
@@ -26,9 +26,16 @@ behavioral controls for one agent. That is the whole job.
 | **DL-5 Critical Sink** | `dl:critical-sink` = `node` | Irreversible-action nodes (severity escalation) |
 | **DL-6 Autonomy Budget** | `dl:autonomy-budget` = `0.0–1.0` | Max fraction of decisions that may be autonomous |
 | **DL-7 Required Steps** | `dl:required-step` = `node` | Mandatory process steps |
+| **DL-8 Resource Budget** | `dl:resource-budget` = `currency\|ceiling` | Cumulative spend ceiling per currency (`tokens`, `iterations`, `cpu_seconds`, `wall_seconds`); one prop per currency |
 
 Plus: `dl:decision-node` = `node` marks the autonomous disposition nodes used to
 compute the DL-6 rate.
+
+DL-8 is audited against the agent's **recorded resource stream** (emitted by
+`driftlab.sensor`, a separate JSONL telemetry plane — see
+`docs/ADR-001-RESOURCE-BUDGET.md`). Fail-closed rule: if you certify ceilings
+but no telemetry is observed, that is itself a MEDIUM finding — certify →
+must observe.
 
 ## 3. Worked example — the shipped `loan-officer-baseline.json`
 
@@ -83,6 +90,7 @@ not allowed; an expired waiver reverts to a live control).
 - [ ] Critical (irreversible) actions are marked (DL-5).
 - [ ] Autonomy ceiling is set from policy, not guesswork (DL-6).
 - [ ] Mandatory steps are listed (DL-7).
+- [ ] Resource ceilings are set per currency and the agent ships the sensor (DL-8).
 - [ ] The baseline is reviewed and signed off by the agent owner + compliance.
 - [ ] `uuid` / `metadata.version` are bumped on every change (new hash = new cycle).
 

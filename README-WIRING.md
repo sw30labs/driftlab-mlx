@@ -90,3 +90,25 @@ The one friction point: `as_langchain_handler()` auto-captures `route` /
 `refusal` / `hitl`. For full DL-3/DL-6/DL-7 coverage you'll want to sprinkle
 a few manual `handler.record(...)` calls at your human-gate and refusal
 points.
+
+## Resource telemetry (DL-8)
+
+If the baseline certifies resource ceilings (`dl:resource-budget`), the agent
+must also ship the sensor — two lines around your work loop (deepagents in a
+ralph loop, or any loop):
+
+```python
+from driftlab.sensor import Sensor
+
+sensor = Sensor("payments-bot", ceilings={"tokens": 200_000, "iterations": 50})
+for task in work_queue:
+    with sensor.iteration():          # meters CPU + wall, counts the iteration,
+        ...                           # raises BudgetExceeded once a ceiling is spent
+    sensor.charge_tokens(usage)       # from your LLM usage callback
+```
+
+The stream lands at `<data_dir>/resource/payments-bot.jsonl` (a *separate*
+JSONL plane — never mixed into the decision trace) and the monitor picks it up
+automatically; a recorded stream can also be pinned per agent with `resource:`
+in `agents.yaml`. Certified ceilings with no observed telemetry fail closed as
+a MEDIUM finding. Design + phasing: `docs/ADR-001-RESOURCE-BUDGET.md`.

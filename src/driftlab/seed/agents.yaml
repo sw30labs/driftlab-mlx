@@ -6,11 +6,13 @@ agents:
     name: "Loan Officer Agent"
     baseline: baselines/loan-officer-baseline.json
     trace: traces/loan-officer-trace.jsonl
+    resource: resource/loan-officer-resource.jsonl   # DL-8 telemetry stream
     priority: 7            # staleness-weighted check priority (1-7, higher = check sooner)
     owner: "Credit Risk Engineering"
   - id: support-triage
     name: "Support Triage Agent"
     baseline: baselines/support-triage-baseline.json
     trace: traces/support-triage-trace.jsonl
+    resource: resource/support-triage-resource.jsonl # DL-8 telemetry stream
     priority: 4
     owner: "Customer Ops"

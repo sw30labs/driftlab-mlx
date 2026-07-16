@@ -14,11 +14,13 @@ SEED = Path(__file__).resolve().parent.parent / "src" / "driftlab" / "seed"
 
 
 def _ledger(agent: str) -> tuple[str, str]:
+    from driftlab.sensor import load_resource_jsonl
     profile = load_profile(SEED / "baselines" / f"{agent}-baseline.json")
     policy = BaselineCompiler().compile(profile)
     events = load_jsonl(SEED / "traces" / f"{agent}-trace.jsonl", agent)
+    records = load_resource_jsonl(SEED / "resource" / f"{agent}-resource.jsonl")
     result = run_cycle(agent, str(SEED / "baselines" / f"{agent}-baseline.json"), events,
-                       run_experiments=False)
+                       run_experiments=False, resource_records=records)
     return result.cycle_id, __import__("json").dumps(result.to_ledger(), sort_keys=True)
 
 

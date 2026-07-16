@@ -32,8 +32,12 @@ def anomaly_id(fingerprint: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "urn:driftlab:anomaly:" + fingerprint))
 
 
-def cycle_id(agent: str, baseline_hash: str, trace_hash: str) -> str:
-    return short_hash(agent, baseline_hash, trace_hash, length=16)
+def cycle_id(agent: str, baseline_hash: str, trace_hash: str, resource_hash: str = "") -> str:
+    """Cycle identity. ``resource_hash`` joins the identity when a resource
+    stream (DL-8) is part of the cycle's inputs; the empty-string default
+    hashes to exactly the legacy id, so cycles without telemetry keep their
+    historical ids."""
+    return short_hash(agent, baseline_hash, trace_hash, resource_hash, length=16)
 
 
 def stable_json_digest(obj: Any) -> str:

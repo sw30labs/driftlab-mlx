@@ -1,11 +1,11 @@
 """OSCAL-shaped behavioral baseline: catalog, profile vocabulary, loader.
 
 The certified baseline is expressed as an OSCAL **profile** that imports the
-DriftLab **catalog** (``driftlab-catalog.json``). The catalog defines seven
-behavioral controls (DL-1..7), each crosswalked to SP 800-53r5, with DL-6 and
-DL-7 anchored on CA-7 (continuous monitoring). The profile binds concrete
-policy via ``dl:`` props. A :class:`BaselineCompiler` turns that into an
-executable, fail-closed :class:`BaselinePolicy`.
+DriftLab **catalog** (``driftlab-catalog.json``). The catalog defines eight
+behavioral controls (DL-1..8), each crosswalked to SP 800-53r5, with DL-6..8
+anchored on CA-7 (continuous monitoring). The profile binds concrete policy
+via ``dl:`` props. A :class:`BaselineCompiler` turns that into an executable,
+fail-closed :class:`BaselinePolicy`.
 
 This module does NOT require the NIST oscal-cli; it validates the structures
 it needs and fails closed on malformed input.
@@ -20,10 +20,11 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError
 
 from ..domain import BaselinePolicy, ControlDef, Severity
+from ..sensor import Currency
 
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "seed" / "baselines" / "driftlab-catalog.json"
 
-# The seven behavioral controls. CA-7 is the continuous-monitoring umbrella.
+# The eight behavioral controls. CA-7 is the continuous-monitoring umbrella.
 CONTROL_FAMILY: list[ControlDef] = [
     ControlDef(id="DL-1", title="Decision rights", description="Per-node tool allowlists",
                nist_800_53=["AC-3", "AC-6", "CM-7(5)"]),
@@ -43,6 +44,9 @@ CONTROL_FAMILY: list[ControlDef] = [
     ControlDef(id="DL-7", title="Required steps + continuous trace evidence",
                description="Mandated nodes present every cycle", nist_800_53=["AU-2", "AU-12", "CA-7"],
                is_ca7=True),
+    ControlDef(id="DL-8", title="Resource budget",
+               description="Cumulative resource spend stays under certified ceilings",
+               nist_800_53=["SC-6", "CA-7"], is_ca7=True),
 ]
 
 
@@ -54,7 +58,7 @@ class CompileError(ValueError):
 _DL_PROPS = {
     "dl:tool-allow", "dl:route-allow", "dl:hitl-when", "dl:fallback-for",
     "dl:critical-sink", "dl:autonomy-budget", "dl:required-step",
-    "dl:decision-node",
+    "dl:decision-node", "dl:resource-budget",
 }
 
 
@@ -156,3 +160,25 @@ class BaselineCompiler:
             policy.decision_nodes.append(value.strip())
         elif name == "dl:required-step":
             policy.required_steps.append(value.strip())
+        elif name == "dl:resource-budget":
+            # value: "currency|ceiling", e.g. "tokens|200000" (DL-8; ADR-001)
+            cur_raw, _, ceiling_raw = value.partition("|")
+            cur_raw = cur_raw.strip()
+            try:
+                currency = Currency(cur_raw)
+            except ValueError:
+                known = ", ".join(c.value for c in Currency)
+                raise CompileError(
+                    f"dl:resource-budget unknown currency {cur_raw!r}; known: {known}")
+            if currency.value in policy.resource_ceilings:
+                raise CompileError(
+                    f"dl:resource-budget duplicate currency {currency.value!r}")
+            try:
+                ceiling = float(ceiling_raw.strip())
+            except ValueError:
+                raise CompileError(
+                    f"dl:resource-budget ceiling not numeric: {ceiling_raw!r}")
+            if not ceiling > 0:
+                raise CompileError(
+                    f"dl:resource-budget ceiling must be > 0, got {ceiling}")
+            policy.resource_ceilings[currency.value] = ceiling

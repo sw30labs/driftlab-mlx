@@ -17,6 +17,9 @@ class AgentSpec:
     trace: str
     priority: int = 4
     owner: str = ""
+    # Optional recorded resource stream (DL-8 telemetry plane). When absent,
+    # the runner falls back to the live sensor path under the data dir.
+    resource: str | None = None
 
 
 def load_registry(path: str | Path) -> list[AgentSpec]:
@@ -27,5 +30,6 @@ def load_registry(path: str | Path) -> list[AgentSpec]:
             id=a["id"], name=a.get("name", a["id"]),
             baseline=a["baseline"], trace=a["trace"],
             priority=int(a.get("priority", 4)), owner=a.get("owner", ""),
+            resource=a.get("resource"),
         ))
     return out

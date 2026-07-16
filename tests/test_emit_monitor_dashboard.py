@@ -35,7 +35,7 @@ def test_emit_artifacts(tmp_path):
     plan = json.loads(p1.read_text())
     assert plan["assessment-plan"]["metadata"]["version"] == "1.1.2"
     results = json.loads(p2.read_text())
-    assert len(results["assessment-results"]["results"]["result"]) == 7
+    assert len(results["assessment-results"]["results"]["result"]) == 8  # DL-1..8
     satisfied = [r for r in results["assessment-results"]["results"]["result"]
                  if r["prop"][0]["value"] == "satisfied"]
     assert len(satisfied) < 7
