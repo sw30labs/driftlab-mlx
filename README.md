@@ -47,6 +47,21 @@ layer for the agentic economy.
 
 ## Quickstart
 
+One command from a fresh checkout — creates the venv, installs, runs the test
+suite, seeds a first estate cycle, and opens the command deck:
+
+```bash
+./setup_and_run.sh                     # use a local OMLX server if one is up
+./setup_and_run.sh --provider none     # deterministic path only, no narratives
+./setup_and_run.sh --help              # flags and environment overrides
+```
+
+It detects OMLX by asking the endpoint what it serves and pins the first chat
+model it offers, skipping speech and embedding models. No server running is not
+an error: narratives switch off and every compliance feature still works.
+
+Or step by step:
+
 ```bash
 cd /Users/spider/Desktop/driftlabv2
 uv venv --python 3.13
@@ -67,8 +82,14 @@ Run a single agent now:
 ```bash
 uv run driftlab check --agent loan-officer
 uv run driftlab monitor run --force      # staleness-weighted estate cycle
-uv run driftlab dashboard --port 8321    # open http://127.0.0.1:8321
+uv run driftlab serve --port 8321        # web command deck at http://127.0.0.1:8321
 ```
+
+The command deck is a single-page operations console: estate posture, the
+anomaly ledger, the DL-1..8 control family, proof-engine verdicts, DL-8
+resource budgets, OSCAL evidence, and a run button that drives a cycle live.
+It is stdlib-only (no server framework, no CDN, no build step), binds loopback,
+and refuses non-loopback API clients — compliance evidence never leaves the host.
 
 ---
 
@@ -82,7 +103,7 @@ uv run driftlab dashboard --port 8321    # open http://127.0.0.1:8321
 | `driftlab monitor run [--force] [--no-email]` | Staleness-weighted estate cycle over the registry |
 | `driftlab monitor --status` | Recent runs from the store |
 | `driftlab report <cycle_id>` | Print a cycle's markdown report |
-| `driftlab dashboard [--host --port]` | Serve the estate UI (air-gapped, no CDN) |
+| `driftlab serve [--host --port --no-browser --view]` | Serve the web command deck (air-gapped, loopback-only, no CDN) |
 | `driftlab demo` | Full E2E on the bundled seed estate |
 
 ---
@@ -108,7 +129,7 @@ Agent runtime (LangGraph/LangChain/any)
     (suspected drift → probe)         (LangGraph: design→execute→evaluate→reflect)
               │
               ├─► [OSCAL Evidence Emitter]  (assessment-plan / assessment-results)
-              ├─► [HTML Dashboard]          (estate + per-agent)
+              ├─► [Web Command Deck]        (estate, ledger, controls, proofs, evidence)
               └─► [Monitor / Scheduler]     (staleness-weighted; cron/launchd)
 ```
 
@@ -129,12 +150,12 @@ driftlab/
 │   ├── emit/          OSCAL 1.1.2-shaped plan/results + markdown report
 │   ├── store/         SQLAlchemy + SQLite (local, idempotent upsert)
 │   ├── monitor/       staleness-weighted policy + runner + SMTP notifier
-│   ├── dashboard/     FastAPI + inline-CSS Jinja (air-gapped)
-│   ├── llm.py         optional OMLX client (streaming=False), advisory-only
+│   ├── web/           command deck: stdlib HTTP server, job runner, SPA (air-gapped)
+│   ├── llm.py         optional OMLX client (non-streaming, stdlib), advisory-only
 │   └── cli.py         Typer + Rich CLI
 ├── seed/              baselines, agents.yaml, recorded traces
 ├── ops/               launchd plist + crontab templates
-├── tests/             51 tests (unit, integration, determinism, sandbox-safety, LLM-optional, sensor + DL-8)
+├── tests/             63 tests (unit, integration, determinism, sandbox-safety, LLM-optional, sensor + DL-8, deck)
 └── docs/              RUNBOOK, CERTIFICATION-GUIDE, PITCH, deck, ROADMAP
 ```
 
@@ -181,10 +202,24 @@ All keys are environment variables prefixed `DRIFTLAB_`:
 |---|---|---|
 | `DRIFTLAB_DATA_DIR` | `~/.driftlab` | SQLite DB + artifacts root |
 | `DRIFTLAB_REGISTRY` | `seed/agents.yaml` | monitored agent registry |
-| `DRIFTLAB_LLM_PROVIDER` | `none` | `none` disables the LLM entirely |
+| `DRIFTLAB_LLM_PROVIDER` | `none` | `none` disables the LLM entirely; `omlx` (alias `mlx`) enables advisory narratives |
 | `DRIFTLAB_OMLX_BASE_URL` | `http://127.0.0.1:8000/v1` | local inference server |
-| `DRIFTLAB_OMLX_API_KEY` | `test` | |
+| `DRIFTLAB_OMLX_API_KEY` | `test` | falls back to `OMLX_API_KEY` when unset |
+| `DRIFTLAB_OMLX_MODEL` | `DeepSeek-V4-Flash-0731-MLX` | model id the endpoint serves |
+| `DRIFTLAB_OMLX_TIMEOUT` | `180` | seconds; large MLX models narrate slowly |
+| `DRIFTLAB_ALLOW_REMOTE_LLM` | `false` | required to accept a non-loopback LLM endpoint |
 | `DRIFTLAB_EMAIL__ENABLED` | `false` | enable SMTP digest |
+
+### Advisory LLM (OMLX)
+
+The compliance path never calls a model. When `DRIFTLAB_LLM_PROVIDER=omlx`, the
+deck can additionally ask a local OMLX server to *narrate* a finished cycle —
+the same backend contract as the sibling projects on this workstation: an
+OpenAI-compatible endpoint on `127.0.0.1:8000/v1`, an explicit model id, and
+never streaming (streaming hangs OMLX on large models). The client is stdlib
+`urllib`, so enabling it installs nothing. A narrative is never persisted into
+a ledger and can never change a score, a severity, or a verdict; if the
+endpoint is down the deck says so and everything else keeps working.
 
 ---
 

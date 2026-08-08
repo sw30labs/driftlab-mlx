@@ -155,8 +155,9 @@ illustrative.
 - Deterministic compliance path (diff/anomaly/score pure Python). ✅
 - Content-derived ids / idempotent re-runs (determinism test passes). ✅
 - Sandbox isolation for the proof engine (sandbox-safety test passes). ✅
-- Tech stack: Pydantic v2, NetworkX, FastAPI+Jinja, Typer+Rich, SQLAlchemy+
-  SQLite, LangGraph. ✅
+- Tech stack: Pydantic v2, NetworkX, Typer+Rich, SQLAlchemy+SQLite, LangGraph.
+  The UI began as FastAPI+Jinja and is now a stdlib-only web command deck —
+  the server framework, template engine and HTTP client all left with it. ✅
 - §8 collateral: README, runbook, certification guide, pitch, deck (12 slides),
   roadmap, this NOTES. ✅
 - Green pytest suite (22 tests) before "done". ✅

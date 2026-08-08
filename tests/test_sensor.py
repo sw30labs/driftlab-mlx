@@ -212,8 +212,8 @@ def test_sensor_import_stays_light():
     code = (
         "import sys, json; import driftlab.sensor; "
         "roots = {m.split('.')[0] for m in sys.modules}; "
-        "heavy = roots & {'fastapi', 'sqlalchemy', 'langgraph', 'uvicorn', "
-        "'networkx', 'jinja2', 'typer', 'rich', 'yaml'}; "
+        "heavy = roots & {'sqlalchemy', 'langgraph', 'networkx', "
+        "'pydantic_settings', 'typer', 'rich', 'yaml'}; "
         "print(json.dumps(sorted(heavy)))"
     )
     proc = subprocess.run(

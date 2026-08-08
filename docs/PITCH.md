@@ -76,7 +76,7 @@ baseline is easy to certify and the audit pressure is highest.
 
 ## Status
 
-Working v2 prototype: green test suite (22 tests), full CLI, dashboard, OSCAL
+Working v2 prototype: green test suite (63 tests), full CLI, web command deck, OSCAL
 evidence emitter, staleness-weighted monitor, and a proven micro-experiment loop
 that confirms seeded drifts and refutes them on a clean trace. See `README.md`
 and `docs/`.

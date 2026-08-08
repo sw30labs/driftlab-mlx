@@ -1,9 +1,8 @@
-"""Emit (OSCAL artifacts + report), monitor, and dashboard smoke tests."""
+"""Emit (OSCAL artifacts + report) and estate monitor smoke tests."""
 
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 
 from driftlab.baseline import BaselineCompiler, load_profile
 from driftlab.ingest import load_jsonl
@@ -53,17 +52,44 @@ def test_monitor_run(tmp_path, monkeypatch):
     assert scores["loan-officer"] < 50
 
 
-def test_dashboard_serves(tmp_path, monkeypatch):
+def test_monitor_progress_hook_and_agent_filter(tmp_path, monkeypatch):
     monkeypatch.setenv("DRIFTLAB_DATA_DIR", str(tmp_path / ".driftlab"))
     from driftlab.config import get_settings
     get_settings.cache_clear()
     from driftlab.monitor.runner import run_estate
-    from driftlab.dashboard.app import app
-    run_estate(force=True, no_email=True)
-    client = TestClient(app)
-    r = client.get("/")
-    assert r.status_code == 200
-    assert "DriftLab" in r.text
-    r2 = client.get("/agent/loan-officer")
-    assert r2.status_code == 200
-    assert "loan-officer" in r2.text
+
+    events = []
+    summary = run_estate(force=True, no_email=True, only=["support-triage"],
+                         on_event=events.append)
+    assert [r["agent"] for r in summary["ran"]] == ["support-triage"]
+
+    # Selecting one agent must not shrink the monitored roster: the whole
+    # registry is still upserted so `monitor status` keeps showing the estate.
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from driftlab.store import AgentRecord, _engine
+    with Session(_engine()) as s:
+        roster = {r.id for r in s.execute(select(AgentRecord)).scalars().all()}
+    assert roster == {"loan-officer", "support-triage"}
+
+    kinds = [e["kind"] for e in events]
+    assert kinds[0] == "estate.started" and kinds[-1] == "estate.finished"
+    assert "cycle.scored" in kinds
+
+    with pytest.raises(ValueError, match="unknown agent"):
+        run_estate(force=True, no_email=True, only=["nope"])
+
+
+def test_progress_hook_cannot_break_a_cycle(tmp_path, monkeypatch):
+    """An observer that raises must not affect the compliance outcome."""
+    monkeypatch.setenv("DRIFTLAB_DATA_DIR", str(tmp_path / ".driftlab"))
+    from driftlab.config import get_settings
+    get_settings.cache_clear()
+    from driftlab.monitor.runner import run_estate
+
+    def boom(_event):
+        raise RuntimeError("observer exploded")
+
+    summary = run_estate(force=True, no_email=True, on_event=boom)
+    assert not summary["errors"]
+    assert {r["agent"]: r["score"] for r in summary["ran"]}["support-triage"] == 100

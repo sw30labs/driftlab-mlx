@@ -95,7 +95,8 @@ degradation indistinguishable from real drift.
 ## Packaging
 
 `driftlab.sensor` lives in-tree for now but must not import
-FastAPI/SQLAlchemy/LangGraph/NetworkX (guarded by a test). When the first
+SQLAlchemy/LangGraph/NetworkX or any settings machinery (guarded by a test).
+When the first
 external app consumes it, it graduates to a standalone dependency-light
 `driftlab-sensor` wheel.
 

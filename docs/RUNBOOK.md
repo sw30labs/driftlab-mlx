@@ -55,8 +55,8 @@ and a controlled replay reproduced it.
 
 ## 5. Respond to a finding
 
-1. Open the dashboard (`uv run driftlab dashboard`) → agent detail → see the
-   evidence events and the experiment rationale.
+1. Open the command deck (`uv run driftlab serve`) → Findings → click the row
+   to see the evidence event ids and the experiment rationale.
 2. If the drift is expected (e.g. an approved temporary change), issue a
    **waiver** and record the rationale + expiry in the baseline's `props`
    (see CERTIFICATION-GUIDE §4). Re-run; the waived control no longer scores.

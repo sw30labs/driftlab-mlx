@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRIFTLAB // Continuous Compliance Observer</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root {
+  --bg: #04060c;
+  --bg2: #080c16;
+  --panel: rgba(13, 20, 34, 0.72);
+  --panel-solid: #0d1422;
+  --line: rgba(94, 234, 212, 0.10);
+  --line-strong: rgba(94, 234, 212, 0.22);
+  --txt: #d7e3f4;
+  --dim: #8493aa;
+  --faint: #77869e;
+  --cyan: #22d3ee;
+  --teal: #5eead4;
+  --amber: #fbbf24;
+  --orange: #fb923c;
+  --red: #f87171;
+  --green: #34d399;
+  --violet: #a78bfa;
+  --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--txt); font-family: var(--sans);
+  font-size: 14px; overflow-x: hidden; min-height: 100vh;
+}
+::selection { background: rgba(34, 211, 238, 0.3); }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1c2a42; border-radius: 5px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #2b3f61; }
+
+/* ── ambient layers ─────────────────────────────── */
+#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#spotlight {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 30%), rgba(34, 211, 238, 0.055), transparent 65%);
+}
+#grain {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.5;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
+}
+
+/* ── boot overlay ───────────────────────────────── */
+#boot {
+  position: fixed; inset: 0; z-index: 100; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px; transition: opacity 0.7s ease, visibility 0.7s;
+}
+#boot.done { opacity: 0; visibility: hidden; }
+.boot-logo {
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.55em; color: var(--cyan);
+  text-transform: uppercase; text-shadow: 0 0 24px rgba(34,211,238,0.6);
+  animation: bootPulse 1.6s ease-in-out infinite;
+}
+@keyframes bootPulse { 50% { opacity: 0.55; } }
+.boot-bar { width: 260px; height: 2px; background: #12203a; overflow: hidden; border-radius: 2px; }
+.boot-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--teal), var(--cyan)); box-shadow: 0 0 12px var(--cyan); transition: width 0.25s ease; }
+.boot-log { font-family: var(--mono); font-size: 10.5px; color: var(--dim); height: 15px; letter-spacing: 0.08em; }
+
+/* ── header ─────────────────────────────────────── */
+header.top {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 26px; height: 62px;
+  background: rgba(4, 6, 12, 0.82); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.logo-mark { width: 34px; height: 34px; flex: none; filter: drop-shadow(0 0 8px rgba(34,211,238,0.45)); }
+.brand { line-height: 1.15; }
+.brand b { font-family: var(--mono); font-size: 15px; letter-spacing: 0.34em; color: #fff; font-weight: 700; }
+.brand span { display: block; font-size: 9.5px; letter-spacing: 0.28em; color: var(--dim); text-transform: uppercase; }
+.top-spacer { flex: 1; }
+.badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  padding: 5px 11px; border: 1px solid var(--line-strong); border-radius: 3px;
+  color: var(--teal); background: rgba(94, 234, 212, 0.05); white-space: nowrap;
+}
+.badge.warn { color: var(--amber); border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.06); }
+.badge.bad { color: var(--red); border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
+.badge.ok { color: var(--green); border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.06); }
+.badge.off { color: var(--faint); border-color: rgba(119,134,158,0.28); background: rgba(119,134,158,0.05); }
+.clock { font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 0.12em; display: flex; align-items: center; gap: 8px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); animation: bootPulse 2s infinite; }
+.live-dot.off { background: var(--dim); box-shadow: none; animation: none; }
+
+/* ── layout ─────────────────────────────────────── */
+.layout { position: relative; z-index: 10; display: flex; min-height: calc(100vh - 62px); }
+nav.side {
+  width: 214px; flex: none; padding: 26px 14px;
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 62px; height: calc(100vh - 62px);
+}
+.nav-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--faint); text-transform: uppercase; padding: 0 12px 10px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--dim); font-family: var(--sans); font-size: 13px;
+  cursor: pointer; text-align: left; transition: all 0.18s ease; position: relative;
+}
+.nav-btn svg { width: 16px; height: 16px; flex: none; opacity: 0.8; }
+.nav-btn:hover { color: var(--txt); background: rgba(94, 234, 212, 0.04); }
+.nav-btn.active {
+  color: var(--teal); background: rgba(94, 234, 212, 0.07);
+  border-color: var(--line-strong); box-shadow: inset 2px 0 0 var(--cyan), 0 0 22px rgba(34,211,238,0.07);
+}
+.nav-btn .count { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.nav-btn .count.hot { color: var(--red); }
+.side-foot { margin-top: auto; font-family: var(--mono); font-size: 9px; color: var(--faint); letter-spacing: 0.14em; padding: 12px; line-height: 1.9; }
+
+main { flex: 1; padding: 28px 30px 60px; max-width: 1520px; }
+.view { display: none; }
+.view.active { display: block; animation: viewIn 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes viewIn { from { opacity: 0; transform: translateY(14px); } }
+
+.view-head { margin-bottom: 22px; }
+.view-head h1 { font-family: var(--mono); font-size: 21px; letter-spacing: 0.12em; color: #fff; font-weight: 600; }
+.view-head h1 em { font-style: normal; color: var(--cyan); }
+.view-head p { color: var(--dim); font-size: 12.5px; margin-top: 5px; letter-spacing: 0.04em; }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  backdrop-filter: blur(8px); padding: 18px 20px; position: relative; overflow: hidden;
+}
+.panel::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(94,234,212,0.35), transparent);
+}
+.panel-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.panel-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.grid { display: grid; gap: 16px; }
+.g-6 { grid-template-columns: repeat(6, 1fr); }
+.g-4 { grid-template-columns: repeat(4, 1fr); }
+.g-3 { grid-template-columns: repeat(3, 1fr); }
+.g-2 { grid-template-columns: repeat(2, 1fr); }
+.g-1 { grid-template-columns: 1fr; }
+.g-23 { grid-template-columns: 2fr 1fr; }
+.mt { margin-top: 16px; }
+@media (max-width: 1100px) {
+  .g-6 { grid-template-columns: repeat(3, 1fr); }
+  .g-4, .g-3, .g-2, .g-23 { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  header.top { padding: 0 12px; gap: 10px; }
+  .brand b { font-size: 11px; letter-spacing: 0.18em; }
+  .brand span, header.top .badge.hide-sm { display: none; }
+  .layout { display: block; }
+  nav.side {
+    position: sticky; top: 62px; z-index: 45;
+    width: 100%; height: auto; padding: 7px 10px;
+    flex-direction: row; overflow-x: auto;
+    border-right: 0; border-bottom: 1px solid var(--line);
+    background: rgba(4, 6, 12, 0.94); backdrop-filter: blur(14px);
+  }
+  .nav-label, .side-foot { display: none; }
+  .nav-btn { flex: none; padding: 8px 10px; white-space: nowrap; }
+  main { padding: 20px 14px 48px; }
+}
+
+/* ── KPI ────────────────────────────────────────── */
+.kpi { padding: 16px 18px; }
+.kpi .k-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; color: var(--dim); text-transform: uppercase; }
+.kpi .k-value { font-family: var(--mono); font-size: 27px; font-weight: 600; color: #fff; margin-top: 8px; letter-spacing: -0.02em; text-shadow: 0 0 26px rgba(34,211,238,0.25); }
+.kpi .k-sub { font-size: 10.5px; color: var(--faint); margin-top: 5px; font-family: var(--mono); }
+.kpi.accent .k-value { color: var(--cyan); }
+.kpi.good .k-value { color: var(--green); }
+.kpi.warn .k-value { color: var(--amber); }
+.kpi.danger .k-value { color: var(--red); }
+
+/* ── toolbar / inputs ───────────────────────────── */
+.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.search {
+  flex: 1; min-width: 220px; display: flex; align-items: center; gap: 9px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 9px 14px;
+}
+.search:focus-within { border-color: var(--line-strong); box-shadow: 0 0 18px rgba(34,211,238,0.08); }
+.search input { flex: 1; background: none; border: none; outline: none; color: var(--txt); font-family: var(--mono); font-size: 12px; }
+.search input::placeholder { color: var(--faint); }
+select.input, input.input, textarea.input {
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 7px;
+  color: var(--txt); font-family: var(--mono); font-size: 11px; padding: 9px 12px; outline: none;
+  width: 100%;
+}
+label.rf-label {
+  display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em;
+  color: var(--dim); text-transform: uppercase; margin-bottom: 7px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+@media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+
+.chip-filter {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line);
+  background: none; color: var(--dim); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.chip-filter:hover { color: var(--txt); border-color: var(--line-strong); }
+.chip-filter.on { color: var(--cyan); border-color: var(--cyan); background: rgba(34,211,238,0.08); }
+.chip-group { display: flex; gap: 7px; flex-wrap: wrap; }
+
+/* ── tables ─────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.data th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--faint); text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+table.data td { padding: 9px 12px; border-bottom: 1px solid rgba(94,234,212,0.05); color: var(--txt); vertical-align: top; }
+table.data tr { cursor: pointer; }
+table.data tr:hover td { background: rgba(94,234,212,0.03); }
+table.data td.mono { font-family: var(--mono); font-size: 11px; }
+table.data td.dim { color: var(--dim); }
+table.data td.nowrap { white-space: nowrap; }
+
+/* ── pills ──────────────────────────────────────── */
+.status-pill { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; padding: 3px 9px; border-radius: 20px; border: 1px solid; white-space: nowrap; text-transform: uppercase; }
+.st-done, .st-ok, .st-satisfied { color: var(--green); border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.07); }
+.st-failed, .st-error, .st-not-satisfied { color: var(--red); border-color: rgba(248,113,113,0.35); background: rgba(248,113,113,0.07); }
+.st-running { color: var(--amber); border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
+.st-pending, .st-unassessed { color: var(--dim); border-color: var(--line-strong); }
+.sev-critical { color: var(--red); border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.09); }
+.sev-high { color: var(--orange); border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.08); }
+.sev-medium { color: var(--amber); border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
+.sev-low { color: var(--cyan); border-color: rgba(34,211,238,0.35); background: rgba(34,211,238,0.06); }
+.sev-info { color: var(--dim); border-color: var(--line-strong); }
+.vd-confirmed { color: var(--red); border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.09); }
+.vd-refuted { color: var(--green); border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.07); }
+.vd-inconclusive { color: var(--amber); border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.07); }
+.vd-not-run { color: var(--faint); border-color: var(--line-strong); }
+.waived-row td { opacity: 0.5; }
+
+.tag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 3px; border: 1px solid var(--line-strong); color: var(--teal); white-space: nowrap;
+}
+.tag.violet { color: var(--violet); border-color: rgba(167,139,250,0.35); }
+.tag.amber { color: var(--amber); border-color: rgba(251,191,36,0.35); }
+.tag.red { color: var(--red); border-color: rgba(248,113,113,0.35); }
+.tag.dim { color: var(--faint); border-color: var(--line); }
+.chips { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ── rows with bars ─────────────────────────────── */
+.risk-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid rgba(94,234,212,0.05); border-radius: 4px; cursor: pointer; }
+.risk-row:hover { background: rgba(94,234,212,0.05); }
+.risk-rank { font-family: var(--mono); font-size: 10px; color: var(--faint); width: 28px; flex: none; }
+.risk-name { flex: 1; font-size: 12.5px; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.risk-bar { width: 130px; height: 4px; background: #12203a; border-radius: 2px; overflow: hidden; flex: none; }
+.risk-bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--teal), var(--cyan)); }
+.risk-bar i.warn { background: linear-gradient(90deg, var(--amber), var(--orange)); }
+.risk-bar i.bad { background: linear-gradient(90deg, var(--orange), var(--red)); }
+.risk-score { font-family: var(--mono); font-size: 12px; width: 96px; text-align: right; flex: none; color: var(--dim); }
+
+/* ── score ring ─────────────────────────────────── */
+.ring-wrap { display: flex; align-items: center; gap: 18px; }
+.ring {
+  width: 96px; height: 96px; border-radius: 50%; flex: none; position: relative;
+  background: conic-gradient(var(--ring-color) calc(var(--pct) * 1%), #12203a 0);
+  display: flex; align-items: center; justify-content: center;
+}
+.ring::after {
+  content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--panel-solid);
+}
+.ring b {
+  position: relative; z-index: 1; font-family: var(--mono); font-size: 22px; color: #fff;
+}
+.ring small { position: relative; z-index: 1; font-family: var(--mono); font-size: 9px; color: var(--faint); }
+
+/* ── cards ──────────────────────────────────────── */
+.scn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+.scn-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 17px 18px 15px; position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.scn-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 14px 40px rgba(0,0,0,0.5); }
+.scn-card.bad { border-color: rgba(248,113,113,0.28); }
+.scn-card.good { border-color: rgba(52,211,153,0.22); }
+.scn-title { font-size: 14.5px; font-weight: 600; color: #fff; line-height: 1.35; }
+.scn-desc { font-size: 12px; color: var(--dim); line-height: 1.55; margin-top: 7px; }
+
+/* ── buttons ────────────────────────────────────── */
+.btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+  padding: 10px 22px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line-strong); transition: all 0.15s; white-space: nowrap;
+  background: none; color: var(--dim);
+}
+.btn.primary { background: var(--cyan); color: #04121a; border-color: var(--cyan); font-weight: 700; }
+.btn.primary:hover { box-shadow: 0 0 22px rgba(34,211,238,0.45); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+.btn.ghost:hover { color: var(--txt); border-color: var(--line-strong); }
+.btn.sm { padding: 6px 13px; font-size: 10px; letter-spacing: 0.12em; }
+
+.control-bar { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.ctl-status { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.04em; }
+.phase-name { font-family: var(--mono); font-size: 14px; color: #fff; letter-spacing: 0.1em; }
+.phase-desc { color: var(--dim); font-size: 11.5px; line-height: 1.6; margin-top: 8px; }
+.phase-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.req-tag { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--violet); }
+
+/* ── event log ──────────────────────────────────── */
+.event-log {
+  font-family: var(--mono); font-size: 11px; line-height: 1.7; color: var(--dim);
+  max-height: 330px; overflow-y: auto;
+}
+.event-log .ev { padding: 4px 0; border-bottom: 1px solid rgba(94,234,212,0.04); }
+.event-log .ev b { color: var(--cyan); font-weight: 600; margin-right: 8px; }
+.event-log .ev .t { color: var(--faint); margin-right: 10px; }
+.event-log .ev.err b { color: var(--red); }
+
+/* ── stage pills ────────────────────────────────── */
+.stage-track { display: flex; gap: 8px; flex-wrap: wrap; }
+.stage-pill {
+  flex: 1; min-width: 104px; padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--line); background: rgba(94,234,212,0.03); cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.stage-pill .sn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--dim); text-transform: uppercase; }
+.stage-pill .sv { font-family: var(--mono); font-size: 22px; color: #fff; margin-top: 6px; }
+.stage-pill .sx { font-family: var(--mono); font-size: 9px; color: var(--faint); margin-top: 3px; }
+.stage-pill.clean { border-color: rgba(52,211,153,0.35); }
+.stage-pill.clean .sv { color: var(--green); }
+.stage-pill.hot { border-color: rgba(248,113,113,0.4); box-shadow: 0 0 18px rgba(248,113,113,0.10); }
+.stage-pill.hot .sv { color: var(--red); }
+.stage-pill:hover { border-color: var(--line-strong); }
+
+/* ── meters ─────────────────────────────────────── */
+.meter { margin-bottom: 13px; }
+.meter-head { display: flex; align-items: baseline; gap: 8px; font-family: var(--mono); font-size: 10.5px; }
+.meter-head .mn { color: var(--dim); letter-spacing: 0.14em; text-transform: uppercase; flex: 1; }
+.meter-head .mv { color: var(--txt); }
+.meter-head .mv.over { color: var(--red); }
+.meter-track { height: 6px; background: #12203a; border-radius: 3px; overflow: hidden; margin-top: 6px; position: relative; }
+.meter-track i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--teal), var(--cyan)); transition: width 0.4s; }
+.meter-track i.over { background: linear-gradient(90deg, var(--orange), var(--red)); }
+.meter-track .ceil { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--faint); opacity: 0.8; }
+
+/* ── modal ──────────────────────────────────────── */
+#modal-overlay {
+  position: fixed; inset: 0; z-index: 80; background: rgba(2, 4, 9, 0.78);
+  backdrop-filter: blur(6px); display: none; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 46px 20px;
+}
+#modal-overlay.open { display: flex; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; } }
+.modal {
+  width: 860px; max-width: 100%; background: #0a101d; border: 1px solid var(--line-strong);
+  border-radius: 14px; padding: 30px 34px; position: relative;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.7), 0 0 50px rgba(34,211,238,0.05);
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+  background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--dim);
+  font-size: 15px; cursor: pointer; font-family: var(--mono);
+}
+.modal-close:hover { color: var(--red); border-color: rgba(248,113,113,0.4); }
+.modal h2 { font-size: 21px; color: #fff; margin: 0 34px 6px 0; }
+.m-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+@media (max-width: 700px) { .m-grid { grid-template-columns: 1fr; } }
+.m-field { background: rgba(94,234,212,0.03); border: 1px solid var(--line); border-radius: 7px; padding: 10px 13px; }
+.m-field .f-label { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.2em; color: var(--faint); text-transform: uppercase; }
+.m-field .f-value { font-size: 12.5px; color: var(--txt); margin-top: 5px; line-height: 1.5; word-break: break-word; }
+.m-section { margin-top: 18px; }
+.m-section .s-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.26em; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; }
+.m-section .s-body { font-size: 12.5px; color: var(--txt); line-height: 1.7; opacity: 0.9; }
+pre.code {
+  font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--txt);
+  background: #060a12; border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 16px; overflow: auto; max-height: 460px; white-space: pre-wrap; word-break: break-word;
+}
+code.inline { font-family: var(--mono); font-size: 11px; color: var(--teal); word-break: break-all; }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--faint); font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; }
+.foot-note { margin-top: 40px; text-align: center; font-family: var(--mono); font-size: 9px; color: var(--faint); letter-spacing: 0.24em; text-transform: uppercase; }
+.live-line {
+  font-family: var(--mono); font-size: 12px; color: var(--teal); letter-spacing: 0.04em;
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+  background: rgba(34,211,238,0.04);
+}
+.spinner { display: inline-block; width: 9px; height: 9px; border: 2px solid rgba(251,191,36,0.25); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: -1px; margin-right: 5px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.note { font-size: 11.5px; color: var(--faint); line-height: 1.7; }
+.note b { color: var(--dim); }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div id="spotlight"></div>
+<div id="grain"></div>
+
+<div id="boot">
+  <div class="boot-logo">DRIFTLAB</div>
+  <div class="boot-bar"><i id="boot-fill"></i></div>
+  <div class="boot-log" id="boot-log">initialising command deck…</div>
+</div>
+
+<header class="top">
+  <svg class="logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 3 L32.02 7.98 L37 20 L32.02 32.02 L20 37 L7.98 32.02 L3 20 L7.98 7.98 Z" stroke="#22d3ee" stroke-width="1.5"/>
+    <line x1="9" y1="24" x2="31" y2="24" stroke="#5eead4" stroke-width="1.3" opacity="0.9"/>
+    <path d="M9 24 H17.5 C22 24 24 17 31 11" stroke="#fbbf24" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <circle cx="17.5" cy="24" r="1.4" fill="#22d3ee"/>
+    <circle cx="31" cy="11" r="1.9" fill="#f87171"/>
+  </svg>
+  <div class="brand">
+    <b>DRIFTLAB</b>
+    <span>Continuous Compliance Observer</span>
+  </div>
+  <div class="top-spacer"></div>
+  <div class="badge hide-sm" id="badge-llm">LLM —</div>
+  <div class="badge hide-sm" id="badge-score">— /100</div>
+  <div class="badge warn" id="badge-status">IDLE</div>
+  <div class="clock"><span class="live-dot off" id="live-dot"></span><span id="clock">--:--:--</span></div>
+</header>
+
+<div class="layout">
+  <nav class="side">
+    <div class="nav-label">Command Deck</div>
+    <button class="nav-btn active" data-view="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      Overview
+    </button>
+    <button class="nav-btn" data-view="estate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="3"/><circle cx="5" cy="18" r="2.4"/><circle cx="19" cy="18" r="2.4"/><path d="M12 10v3M12 13 6.8 16M12 13l5.2 3"/></svg>
+      Estate <span class="count" id="nav-estate-count"></span>
+    </button>
+    <button class="nav-btn" data-view="findings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.9 18.4a1.6 1.6 0 0 0 1.4 2.4h17.4a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0z"/><path d="M12 9.5v4.2M12 17.2v.01"/></svg>
+      Findings <span class="count" id="nav-find-count"></span>
+    </button>
+    <button class="nav-btn" data-view="controls">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 20 6.4v5.3c0 4.7-3.2 8.4-8 9.3-4.8-.9-8-4.6-8-9.3V6.4z"/><path d="M9 12.2l2.1 2.1L15.4 10"/></svg>
+      Controls <span class="count" id="nav-ctrl-count"></span>
+    </button>
+    <button class="nav-btn" data-view="experiments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3v6.2L4.3 18a1.7 1.7 0 0 0 1.5 2.6h12.4a1.7 1.7 0 0 0 1.5-2.6l-5.2-8.8V3"/><path d="M8.2 3h7.6M7.4 14h9.2"/></svg>
+      Experiments <span class="count" id="nav-exp-count"></span>
+    </button>
+    <button class="nav-btn" data-view="resources">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20v-6M9 20V8M15 20v-9M21 20V4"/></svg>
+      Resources <span class="count" id="nav-res-count"></span>
+    </button>
+    <button class="nav-btn" data-view="monitor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+      Monitor
+    </button>
+    <button class="nav-btn" data-view="evidence">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3v5.5H19M8.6 13h6.8M8.6 16.6h4.6"/></svg>
+      Evidence <span class="count" id="nav-ev-count"></span>
+    </button>
+    <button class="nav-btn" data-view="about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11 v5 M12 7.5 v.01"/></svg>
+      About
+    </button>
+    <div class="side-foot">
+      DL-1..8 · OSCAL 1.1.2<br>
+      DETERMINISTIC VERDICTS<br>
+      OMLX ADVISORY ONLY<br>
+      LOCAL · AIR-GAPPED
+    </div>
+  </nav>
+
+  <main>
+    <!-- ── OVERVIEW ─────────────────────────────── -->
+    <section class="view active" id="view-overview">
+      <div class="view-head">
+        <h1>SITUATION <em>ROOM</em></h1>
+        <p>Estate-wide compliance posture: observed agent behavior diffed against certified OSCAL baselines.</p>
+      </div>
+      <div class="grid g-6" id="kpis"></div>
+      <div class="grid g-1 mt">
+        <div class="live-line" id="live-line">⟳ no cycle yet — run one from Monitor</div>
+      </div>
+      <div class="grid g-23 mt">
+        <div class="panel">
+          <div class="panel-title">Agent Compliance</div>
+          <div id="agent-scores"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Estate Score</div>
+          <div class="ring-wrap">
+            <div class="ring" id="estate-ring" style="--pct:0;--ring-color:var(--dim)"><b id="ring-value">—</b></div>
+            <div>
+              <div class="note" id="ring-note">No cycle recorded yet.</div>
+              <div class="chips" id="ring-chips"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid g-1 mt">
+        <div class="panel">
+          <div class="panel-title">Control Posture · DL-1..8</div>
+          <div class="stage-track" id="control-track"></div>
+        </div>
+      </div>
+      <div class="grid g-1 mt">
+        <div class="panel">
+          <div class="panel-title">Live Cycle Events</div>
+          <div class="event-log" id="event-log"><div class="empty">NO EVENTS YET</div></div>
+        </div>
+      </div>
+      <div class="foot-note">deterministic compliance path · llm advisory only · nothing leaves this host</div>
+    </section>
+
+    <!-- ── ESTATE ───────────────────────────────── -->
+    <section class="view" id="view-estate">
+      <div class="view-head">
+        <h1>AGENT <em>ESTATE</em></h1>
+        <p>Monitored agents, staleness-weighted check priority, and latest cycle outcome.</p>
+      </div>
+      <div class="toolbar">
+        <div class="search"><input id="estate-search" placeholder="Filter agents…" /></div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Agent</th><th>Owner</th><th>Prio</th><th>Score</th>
+                <th>Active</th><th>Waived</th><th>Controls hit</th><th>Last cycle</th><th>Staleness</th>
+              </tr>
+            </thead>
+            <tbody id="estate-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="estate-empty" style="display:none">NO AGENTS IN THE REGISTRY</div>
+      </div>
+    </section>
+
+    <!-- ── FINDINGS ─────────────────────────────── -->
+    <section class="view" id="view-findings">
+      <div class="view-head">
+        <h1>ANOMALY <em>LEDGER</em></h1>
+        <p>Every deviation the diff engine found, with its proof-engine verdict. Severity is computed, never inferred.</p>
+      </div>
+      <div class="toolbar">
+        <div class="search"><input id="find-search" placeholder="Filter by title, control, agent, detail…" /></div>
+        <div class="chip-group" id="sev-filters"></div>
+        <button class="chip-filter" id="waived-toggle">Show waived</button>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th>Sev</th><th>Control</th><th>Agent</th><th>Finding</th><th>Evidence</th><th>Verdict</th><th>Weight</th></tr>
+            </thead>
+            <tbody id="find-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="find-empty" style="display:none">NO FINDINGS MATCH</div>
+      </div>
+    </section>
+
+    <!-- ── CONTROLS ─────────────────────────────── -->
+    <section class="view" id="view-controls">
+      <div class="view-head">
+        <h1>CONTROL <em>FAMILY</em></h1>
+        <p>The eight behavioral controls, crosswalked to SP 800-53r5. DL-6, DL-7 and DL-8 anchor on CA-7 continuous monitoring.</p>
+      </div>
+      <div class="scn-grid" id="control-grid"></div>
+    </section>
+
+    <!-- ── EXPERIMENTS ──────────────────────────── -->
+    <section class="view" id="view-experiments">
+      <div class="view-head">
+        <h1>PROOF <em>ENGINE</em></h1>
+        <p>Each suspected drift is probed against a sandboxed replay of the trace. Verdicts are computed from probe counts — the LLM never touches them.</p>
+      </div>
+      <div class="grid g-3" id="exp-kpis"></div>
+      <div class="panel mt">
+        <div class="panel-title">Experiment Register</div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr><th>Verdict</th><th>Control</th><th>Agent</th><th>Claim</th><th>Probe</th><th>Samples</th><th>Violations</th></tr>
+            </thead>
+            <tbody id="exp-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="exp-empty" style="display:none">NO EXPERIMENTS RUN</div>
+      </div>
+    </section>
+
+    <!-- ── RESOURCES ────────────────────────────── -->
+    <section class="view" id="view-resources">
+      <div class="view-head">
+        <h1>RESOURCE <em>BUDGET</em></h1>
+        <p>DL-8: cumulative spend from the sensor telemetry plane against certified ceilings. Telemetry is never compliance evidence — it is audited as its own stream.</p>
+      </div>
+      <div class="grid g-2" id="resource-grid"></div>
+      <div class="empty" id="resource-empty">NO RESOURCE TELEMETRY OBSERVED</div>
+    </section>
+
+    <!-- ── MONITOR ──────────────────────────────── -->
+    <section class="view" id="view-monitor">
+      <div class="view-head">
+        <h1>MONITOR <em>CONTROL</em></h1>
+        <p>Run a compliance cycle now. One cycle at a time — the store is single-writer and artifacts are content-addressed.</p>
+      </div>
+      <div class="panel">
+        <div class="control-bar">
+          <div class="ctl-status" id="llm-status">● probing advisory backend…</div>
+          <button class="btn primary" id="run-btn">▶ RUN ESTATE CYCLE</button>
+        </div>
+        <div class="form-grid mt" style="margin-top:18px">
+          <div>
+            <label class="rf-label">Scope</label>
+            <select class="input" id="f-scope">
+              <option value="estate" selected>estate — every registered agent</option>
+              <option value="agent">agent — one agent only</option>
+            </select>
+          </div>
+          <div>
+            <label class="rf-label">Agent</label>
+            <select class="input" id="f-agent"></select>
+          </div>
+          <div class="full">
+            <label class="rf-label" style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0.04em">
+              <input type="checkbox" id="f-force" checked style="width:auto" />
+              Force — ignore staleness weighting and check every selected agent now.
+            </label>
+          </div>
+          <div class="full">
+            <label class="rf-label" style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0.04em">
+              <input type="checkbox" id="f-experiments" checked style="width:auto" />
+              Run micro-experiments — probe each MEDIUM+ anomaly against the replay sandbox.
+            </label>
+          </div>
+          <div class="full">
+            <label class="rf-label" style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0.04em">
+              <input type="checkbox" id="f-narrative" style="width:auto" />
+              Advisory narrative — after the cycle, ask the local OMLX model to summarise it. Never affects a score or verdict.
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-2 mt">
+        <div class="panel">
+          <div class="phase-name">DIFF</div>
+          <div class="phase-desc">Observed decision trace vs the compiled baseline policy. Eight independent control checks, pure Python.</div>
+          <div class="phase-foot"><span class="req-tag">DETERMINISTIC</span></div>
+        </div>
+        <div class="panel">
+          <div class="phase-name">ANOMALY + SCORE</div>
+          <div class="phase-desc">Findings become fingerprinted anomalies; DL-5 escalates any that reach a critical sink. Score = 100 − Σ weights.</div>
+          <div class="phase-foot"><span class="req-tag">DETERMINISTIC</span></div>
+        </div>
+        <div class="panel">
+          <div class="phase-name">EXPERIMENT</div>
+          <div class="phase-desc">A bounded LangGraph loop probes a replay of the trace to confirm or refute each drift. Never touches the live system or the network.</div>
+          <div class="phase-foot"><span class="req-tag">SANDBOXED REPLAY</span></div>
+        </div>
+        <div class="panel">
+          <div class="phase-name">EMIT</div>
+          <div class="phase-desc">OSCAL assessment plan + results, the JSON ledger, and a markdown report — byte-identical across re-runs of the same inputs.</div>
+          <div class="phase-foot"><span class="req-tag">OSCAL 1.1.2</span></div>
+        </div>
+      </div>
+
+      <div class="panel mt">
+        <div class="panel-title">Staleness Schedule</div>
+        <div class="stage-track" id="staleness-track"></div>
+      </div>
+
+      <div class="panel mt">
+        <div class="panel-title">Run History</div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Job</th><th>Kind</th><th>Status</th><th>Started</th><th>Finished</th><th>Detail</th></tr></thead>
+            <tbody id="job-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── EVIDENCE ─────────────────────────────── -->
+    <section class="view" id="view-evidence">
+      <div class="view-head">
+        <h1>OSCAL <em>EVIDENCE</em></h1>
+        <p>Artifacts emitted for each cycle, on disk and auditor-ready. Click a file to read it without leaving the deck.</p>
+      </div>
+      <div id="evidence-list"></div>
+      <div class="empty" id="evidence-empty">NO ARTIFACTS EMITTED YET</div>
+    </section>
+
+    <!-- ── ABOUT ────────────────────────────────── -->
+    <section class="view" id="view-about">
+      <div class="view-head">
+        <h1>ABOUT <em>DRIFTLAB</em></h1>
+        <p>The control monitor layer for running agentic systems.</p>
+      </div>
+      <div class="grid g-2">
+        <div class="panel">
+          <div class="panel-title">What it does</div>
+          <p class="note">
+            DriftLab watches a live agent's actual decision traces — tool calls, routing choices,
+            escalations, refusals, resource spend — and diffs observed behavior against a certified
+            OSCAL baseline. When behavior deviates it does not merely alert: it runs a
+            micro-experiment that proves or refutes the suspected drift against a sandboxed replay,
+            then emits OSCAL and human-readable evidence.
+          </p>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Non-negotiables</div>
+          <p class="note">
+            <b>Deterministic compliance path.</b> Diff, anomaly and scoring engines are pure Python.
+            A CRITICAL fires because the diff engine found a structural deviation on a critical-sink
+            node — never because a model thought something looked wrong.<br><br>
+            <b>Local-first.</b> No trace leaves the host. The deck binds loopback and refuses
+            non-loopback API clients.<br><br>
+            <b>Advisory-only LLM.</b> OMLX may write narratives. It never decides a severity or a verdict.
+          </p>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Stack</div>
+          <p class="note" style="font-family:var(--mono)" id="about-stack">
+            Pydantic · NetworkX path analysis<br>
+            LangGraph experiment loop · SQLite store<br>
+            OMLX (OpenAI-compatible, non-streaming)<br>
+            Command deck UI · stdlib HTTP
+          </p>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Runtime</div>
+          <p class="note" style="font-family:var(--mono)" id="about-runtime">—</p>
+        </div>
+        <div class="panel">
+          <div class="panel-title">CLI</div>
+          <p class="note" style="font-family:var(--mono)">
+            driftlab serve<br>
+            driftlab agents<br>
+            driftlab check --agent loan-officer<br>
+            driftlab monitor run --force<br>
+            driftlab report &lt;cycle_id&gt;<br>
+            driftlab demo
+          </p>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Author</div>
+          <p class="note">Nicolas Cravino · Apache-2.0</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Detail">
+    <button class="modal-close" id="modal-close" aria-label="Close detail">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const SEVERITIES = ["critical", "high", "medium", "low", "info"];
+
+let SNAP = null;
+let JOBS = [];
+let BUSY = false;
+let LLM = null;
+let SEV_FILTER = new Set();
+let SHOW_WAIVED = false;
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// The deck polls every 1.5s. Rewriting identical markup would reset scroll
+// position inside the event log and needlessly re-bind row handlers, so a
+// render is a no-op unless the content actually changed. Callers re-bind
+// listeners only when this returns true.
+function setHTML(el, html) {
+  if (el.__html === html) return false;
+  el.__html = html;
+  el.innerHTML = html;
+  return true;
+}
+function num(n, digits=0) {
+  const v = Number(n);
+  if (!isFinite(v)) return "—";
+  if (Math.abs(v) >= 1000) return v.toLocaleString(undefined, {maximumFractionDigits: 0});
+  return v.toFixed(digits).replace(/\.0+$/, "");
+}
+function band(score) {
+  if (score == null) return "unknown";
+  if (score >= 90) return "ok";
+  if (score >= 60) return "warn";
+  return "bad";
+}
+function bandColor(b) {
+  return {ok: "var(--green)", warn: "var(--amber)", bad: "var(--red)"}[b] || "var(--dim)";
+}
+function shortTime(iso) {
+  return String(iso || "").replace("T", " ").replace("Z", "").slice(0, 19) || "—";
+}
+function ago(hours) {
+  if (hours == null) return "never";
+  if (hours < 1) return Math.round(hours * 60) + "m ago";
+  if (hours < 48) return hours.toFixed(1) + "h ago";
+  return (hours / 24).toFixed(1) + "d ago";
+}
+function qs() {
+  return Object.fromEntries(new URLSearchParams(location.search).entries());
+}
+
+/* ── boot ── */
+(function boot() {
+  const fill = $("#boot-fill"), log = $("#boot-log");
+  const steps = [
+    [18, "loading static shell…"],
+    [40, "binding command deck…"],
+    [62, "probing advisory backend…"],
+    [84, "hydrating compliance store…"],
+    [100, "ready"],
+  ];
+  let i = 0;
+  const t = setInterval(() => {
+    if (i >= steps.length) {
+      clearInterval(t);
+      setTimeout(() => $("#boot").classList.add("done"), 250);
+      return;
+    }
+    fill.style.width = steps[i][0] + "%";
+    log.textContent = steps[i][1];
+    i++;
+  }, 180);
+})();
+
+/* ── ambient ── */
+(function ambient() {
+  const c = $("#bg-canvas"), ctx = c.getContext("2d");
+  let w, h, dots = [];
+  function resize() {
+    w = c.width = innerWidth; h = c.height = innerHeight;
+    dots = Array.from({length: 48}, () => ({
+      x: Math.random()*w, y: Math.random()*h,
+      r: Math.random()*1.4+0.3, v: Math.random()*0.15+0.02
+    }));
+  }
+  resize(); addEventListener("resize", resize);
+  addEventListener("pointermove", e => {
+    document.documentElement.style.setProperty("--mx", e.clientX + "px");
+    document.documentElement.style.setProperty("--my", e.clientY + "px");
+  });
+  (function frame() {
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "rgba(94,234,212,0.35)";
+    for (const d of dots) {
+      d.y -= d.v; if (d.y < 0) d.y = h;
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  })();
+})();
+
+function tickClock() {
+  $("#clock").textContent = new Date().toTimeString().slice(0,8);
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ── nav ── */
+function go(name) {
+  $$(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  $$(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
+  location.hash = name;
+}
+$$(".nav-btn").forEach(b => b.addEventListener("click", () => go(b.dataset.view)));
+// go() writes location.hash, so each view change is a history entry; without
+// this the browser Back button would change the URL but not the view.
+addEventListener("hashchange", () => {
+  const name = location.hash.slice(1);
+  if (name && $(`[data-view="${name}"]`)) go(name);
+});
+
+/* ── API ── */
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+/* ── renderers ── */
+function renderKPIs(k) {
+  const cards = [
+    {label: "Estate score", value: k.estate_score == null ? "—" : k.estate_score,
+     sub: k.worst_agent ? `worst ${k.worst_agent} @ ${k.worst_score}` : "no cycle yet",
+     cls: {ok:"good", warn:"warn", bad:"danger"}[band(k.estate_score)] || ""},
+    {label: "Agents", value: k.agents_checked + "/" + k.agents,
+     sub: `${k.agents_due} due for check`, cls: "accent"},
+    {label: "Active anomalies", value: k.anomalies_active,
+     sub: `${k.waived} waived`, cls: k.anomalies_active ? "danger" : "good"},
+    {label: "Critical · high", value: k.critical + " · " + k.high,
+     sub: "severity computed, not inferred", cls: k.critical ? "danger" : (k.high ? "warn" : "good")},
+    {label: "Proven drifts", value: k.confirmed,
+     sub: `${k.refuted} refuted · ${k.inconclusive} inconclusive`, cls: k.confirmed ? "danger" : "good"},
+    {label: "Controls breached", value: k.controls_violated + "/" + k.controls_total,
+     sub: k.resource_breaches ? `${k.resource_breaches} resource breach` : "DL-1..8",
+     cls: k.controls_violated ? "warn" : "good"},
+  ];
+  setHTML($("#kpis"), cards.map(c => `
+    <div class="panel kpi ${c.cls}">
+      <div class="k-label">${esc(c.label)}</div>
+      <div class="k-value" style="font-size:${String(c.value).length>7?'17px':'27px'}">${esc(c.value)}</div>
+      <div class="k-sub">${esc(c.sub)}</div>
+    </div>`).join(""));
+}
+
+function renderRing(k) {
+  const score = k.estate_score;
+  const b = band(score);
+  const ring = $("#estate-ring");
+  ring.style.setProperty("--pct", score == null ? 0 : score);
+  ring.style.setProperty("--ring-color", bandColor(b));
+  $("#ring-value").textContent = score == null ? "—" : score;
+  $("#ring-note").innerHTML = score == null
+    ? "No cycle recorded yet."
+    : `Mean of ${k.agents_checked} checked agent${k.agents_checked === 1 ? "" : "s"}. `
+      + `Score starts at 100 and drops by the weight of every un-waived anomaly.`;
+  setHTML($("#ring-chips"), [
+    `<span class="tag ${k.critical ? "red" : "dim"}">CRITICAL ${k.critical}</span>`,
+    `<span class="tag ${k.high ? "amber" : "dim"}">HIGH ${k.high}</span>`,
+    `<span class="tag ${k.confirmed ? "red" : "dim"}">PROVEN ${k.confirmed}</span>`,
+    `<span class="tag ${k.breaker_fired ? "amber" : "dim"}">BREAKER ${k.breaker_fired}</span>`,
+  ].join(""));
+}
+
+function renderAgentScores(agents) {
+  const box = $("#agent-scores");
+  if (!agents.length) { setHTML(box, `<div class="empty">NO AGENTS REGISTERED</div>`); return; }
+  const changed = setHTML(box, agents.map((a, i) => {
+    const b = band(a.score);
+    return `<div class="risk-row" tabindex="0" role="button" data-agent="${esc(a.id)}">
+      <div class="risk-rank">${String(i+1).padStart(2,"0")}</div>
+      <div class="risk-name">${esc(a.name)}</div>
+      <div class="risk-bar"><i class="${b === "ok" ? "" : b}" style="width:${a.score == null ? 0 : a.score}%"></i></div>
+      <div class="risk-score">${a.score == null ? "unchecked" : a.score + "/100"}</div>
+    </div>`;
+  }).join(""));
+  if (changed) box.querySelectorAll(".risk-row").forEach(r =>
+    r.addEventListener("click", () => openAgent(r.dataset.agent)));
+}
+
+function renderControlTrack(controls) {
+  const box = $("#control-track");
+  const changed = setHTML(box, controls.map(c => {
+    const cls = c.status === "not-satisfied" ? "hot" : (c.status === "satisfied" ? "clean" : "");
+    return `<div class="stage-pill ${cls}" tabindex="0" role="button" data-control="${esc(c.id)}">
+      <div class="sn">${esc(c.id)}</div>
+      <div class="sv">${c.findings}</div>
+      <div class="sx">${esc(c.title)}</div>
+    </div>`;
+  }).join(""));
+  if (changed) box.querySelectorAll(".stage-pill").forEach(p =>
+    p.addEventListener("click", () => openControl(p.dataset.control)));
+}
+
+function renderEvents(events) {
+  const box = $("#event-log");
+  if (!events || !events.length) { setHTML(box, `<div class="empty">NO EVENTS YET</div>`); return; }
+  setHTML(box, events.slice(-100).reverse().map(e => {
+    const kind = e.kind || "event";
+    const at = shortTime(e.at).slice(11) || "";
+    const bits = [];
+    if (e.agent) bits.push(e.agent);
+    if (e.events != null) bits.push(e.events + " events");
+    if (e.records != null) bits.push(e.records + " records");
+    if (e.score != null) bits.push("score " + e.score);
+    if (e.anomalies != null) bits.push(e.anomalies + " anomalies");
+    if (e.control) bits.push(e.control);
+    if (e.verdict) bits.push("→ " + e.verdict);
+    if (e.note) bits.push(e.note);
+    if (e.error) bits.push(e.error);
+    if (e.ran != null) bits.push(`ran ${e.ran} · skipped ${e.skipped} · errors ${e.errors}`);
+    const bad = kind.endsWith(".error") || kind.endsWith(".failed");
+    return `<div class="ev${bad ? " err" : ""}"><span class="t">${esc(at)}</span><b>${esc(kind)}</b>${esc(bits.join(" · "))}</div>`;
+  }).join(""));
+}
+
+function renderEstate(agents, filter="") {
+  const q = filter.trim().toLowerCase();
+  const rows = agents.filter(a => !q
+    || a.id.toLowerCase().includes(q)
+    || (a.name||"").toLowerCase().includes(q)
+    || (a.owner||"").toLowerCase().includes(q));
+  $("#nav-estate-count").textContent = agents.length || "";
+  const tb = $("#estate-tbody");
+  $("#estate-empty").style.display = rows.length ? "none" : "block";
+  const changed = setHTML(tb, rows.map(a => {
+    const b = band(a.score);
+    const stale = a.staleness == null ? "—"
+      : `${Math.round(a.staleness * 100)}% of ${a.interval_hours}h`;
+    return `<tr tabindex="0" role="button" data-agent="${esc(a.id)}">
+      <td><b>${esc(a.name)}</b><div class="mono" style="color:var(--faint);font-size:10px">${esc(a.id)}</div></td>
+      <td class="dim">${esc(a.owner || "—")}</td>
+      <td class="mono">${a.priority}</td>
+      <td class="mono" style="color:${bandColor(b)}">${a.score == null ? "—" : a.score + "/100"}</td>
+      <td class="mono">${a.anomalies_active}</td>
+      <td class="mono dim">${a.waived}</td>
+      <td class="mono dim">${esc(a.controls_violated.join(" ") || "—")}</td>
+      <td class="mono dim nowrap">${esc(shortTime(a.last_cycle))}</td>
+      <td class="mono dim nowrap">${a.due ? '<span class="status-pill st-running">due</span> ' : ""}${esc(stale)}</td>
+    </tr>`;
+  }).join(""));
+  if (changed) tb.querySelectorAll("tr").forEach(tr =>
+    tr.addEventListener("click", () => openAgent(tr.dataset.agent)));
+}
+
+function renderSevFilters(findings) {
+  const counts = {};
+  for (const f of findings) counts[f.severity] = (counts[f.severity] || 0) + 1;
+  const box = $("#sev-filters");
+  const changed = setHTML(box, SEVERITIES.map(s =>
+    `<button class="chip-filter${SEV_FILTER.has(s) ? " on" : ""}" data-sev="${s}">${s} ${counts[s] || 0}</button>`
+  ).join(""));
+  if (changed) box.querySelectorAll(".chip-filter").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.sev;
+      SEV_FILTER.has(s) ? SEV_FILTER.delete(s) : SEV_FILTER.add(s);
+      renderFindings();
+    }));
+}
+
+function renderFindings() {
+  const all = (SNAP && SNAP.findings) || [];
+  const q = $("#find-search").value.trim().toLowerCase();
+  const rows = all.filter(f => {
+    if (!SHOW_WAIVED && f.waived) return false;
+    if (SEV_FILTER.size && !SEV_FILTER.has(f.severity)) return false;
+    if (!q) return true;
+    return [f.title, f.detail, f.control, f.agent, f.verdict]
+      .some(v => String(v || "").toLowerCase().includes(q));
+  });
+  $("#nav-find-count").textContent = all.filter(f => !f.waived).length || "";
+  $("#nav-find-count").className = "count" + (all.some(f => !f.waived && f.severity === "critical") ? " hot" : "");
+  renderSevFilters(all);
+  $("#waived-toggle").classList.toggle("on", SHOW_WAIVED);
+  const tb = $("#find-tbody");
+  $("#find-empty").style.display = rows.length ? "none" : "block";
+  const changed = setHTML(tb, rows.map((f, i) => `
+    <tr tabindex="0" role="button" data-idx="${i}" class="${f.waived ? "waived-row" : ""}">
+      <td><span class="status-pill sev-${esc(f.severity)}">${esc(f.severity)}</span></td>
+      <td class="mono">${esc(f.control)}</td>
+      <td class="mono dim">${esc(f.agent)}</td>
+      <td>${esc(f.title)}${f.waived ? ' <span class="tag dim">waived</span>' : ""}
+        <div class="dim" style="font-size:11px;margin-top:3px">${esc(String(f.detail || "").slice(0, 130))}</div></td>
+      <td class="mono dim">${(f.evidence || []).length}</td>
+      <td><span class="status-pill vd-${esc(String(f.verdict).replace("_","-"))}">${esc(f.verdict)}</span></td>
+      <td class="mono dim">−${f.waived ? 0 : f.weight}</td>
+    </tr>`).join(""));
+  // Rows index into `rows`; identical markup implies an identical mapping, so
+  // the handlers already bound to these nodes stay correct. Rebinding without
+  // this guard would stack a new handler on every poll.
+  if (changed) tb.querySelectorAll("tr").forEach(tr =>
+    tr.addEventListener("click", () => openFinding(rows[Number(tr.dataset.idx)])));
+}
+
+function renderControls(controls) {
+  $("#nav-ctrl-count").textContent = controls.filter(c => c.status === "not-satisfied").length || "";
+  const grid = $("#control-grid");
+  const changed = setHTML(grid, controls.map(c => {
+    const cls = c.status === "not-satisfied" ? "bad" : (c.status === "satisfied" ? "good" : "");
+    return `<div class="scn-card ${cls}" tabindex="0" role="button" data-control="${esc(c.id)}">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:9px;flex-wrap:wrap">
+        <span class="tag">${esc(c.id)}</span>
+        <span class="status-pill st-${esc(c.status)}">${esc(c.status)}</span>
+        ${c.is_ca7 ? '<span class="tag violet">CA-7</span>' : ""}
+      </div>
+      <div class="scn-title">${esc(c.title)}</div>
+      <div class="scn-desc">${esc(c.description)}</div>
+      <div class="chips">
+        ${c.nist_800_53.map(n => `<span class="tag dim">${esc(n)}</span>`).join("")}
+      </div>
+      <div class="phase-foot">
+        <span class="req-tag">${c.findings} FINDING${c.findings === 1 ? "" : "S"}</span>
+        ${c.confirmed ? `<span class="req-tag" style="color:var(--red)">${c.confirmed} PROVEN</span>` : ""}
+        <span class="req-tag" style="color:var(--faint)">${esc(c.agents_violating.join(", ") || "clean across estate")}</span>
+      </div>
+    </div>`;
+  }).join(""));
+  if (changed) grid.querySelectorAll(".scn-card").forEach(card =>
+    card.addEventListener("click", () => openControl(card.dataset.control)));
+}
+
+function renderExperiments(experiments) {
+  $("#nav-exp-count").textContent = experiments.length || "";
+  const by = v => experiments.filter(e => e.verdict === v).length;
+  setHTML($("#exp-kpis"), [
+    {l: "Confirmed", v: by("confirmed"), s: "drift proven on replay", c: by("confirmed") ? "danger" : "good"},
+    {l: "Refuted", v: by("refuted"), s: "probe found no violation", c: "good"},
+    {l: "Inconclusive", v: by("inconclusive"), s: "insufficient evidence", c: by("inconclusive") ? "warn" : ""},
+  ].map(c => `<div class="panel kpi ${c.c}"><div class="k-label">${c.l}</div><div class="k-value">${c.v}</div><div class="k-sub">${c.s}</div></div>`).join(""));
+
+  const tb = $("#exp-tbody");
+  $("#exp-empty").style.display = experiments.length ? "none" : "block";
+  const changed = setHTML(tb, experiments.map((e, i) => `
+    <tr tabindex="0" role="button" data-idx="${i}">
+      <td><span class="status-pill vd-${esc(e.verdict)}">${esc(e.verdict)}</span></td>
+      <td class="mono">${esc(e.control)}</td>
+      <td class="mono dim">${esc(e.agent)}</td>
+      <td>${esc(e.title)}</td>
+      <td class="mono dim">${esc(e.kind)}</td>
+      <td class="mono">${num(e.samples)}</td>
+      <td class="mono" style="color:${e.violations ? "var(--red)" : "var(--dim)"}">${num(e.violations)}</td>
+    </tr>`).join(""));
+  if (changed) tb.querySelectorAll("tr").forEach(tr =>
+    tr.addEventListener("click", () => openExperiment(experiments[Number(tr.dataset.idx)])));
+}
+
+function renderResources(resources) {
+  $("#nav-res-count").textContent = resources.length || "";
+  $("#resource-empty").style.display = resources.length ? "none" : "block";
+  setHTML($("#resource-grid"), resources.map(r => `
+    <div class="panel">
+      <div class="panel-title">${esc(r.agent_name)}</div>
+      <div class="chips" style="margin:0 0 14px">
+        <span class="tag">${num(r.records)} records</span>
+        <span class="tag ${r.breaker_fired ? "amber" : "dim"}">breaker ${r.breaker_fired ? "fired" : "quiet"}</span>
+        ${(r.fidelity_observed || []).map(f => `<span class="tag ${f === "full" ? "dim" : "violet"}">fidelity ${esc(f)}</span>`).join("")}
+        ${r.exceeded ? '<span class="tag red">ceiling exceeded</span>' : ""}
+      </div>
+      ${r.currencies.map(c => {
+        const pct = c.ceiling ? Math.min(100, (c.spent / c.ceiling) * 100) : 0;
+        return `<div class="meter">
+          <div class="meter-head">
+            <span class="mn">${esc(c.currency)}</span>
+            <span class="mv${c.exceeded ? " over" : ""}">${num(c.spent, 2)}${c.ceiling != null ? " / " + num(c.ceiling, 2) : " (uncapped)"}</span>
+          </div>
+          <div class="meter-track"><i class="${c.exceeded ? "over" : ""}" style="width:${pct}%"></i></div>
+        </div>`;
+      }).join("") || `<div class="note">No certified ceilings for this agent.</div>`}
+    </div>`).join(""));
+}
+
+function renderEvidence(agents) {
+  const withArtifacts = agents.filter(a => (a.artifacts || []).length);
+  $("#nav-ev-count").textContent = withArtifacts.reduce((n, a) => n + a.artifacts.length, 0) || "";
+  $("#evidence-empty").style.display = withArtifacts.length ? "none" : "block";
+  const list = $("#evidence-list");
+  const changed = setHTML(list, withArtifacts.map(a => `
+    <div class="panel mt">
+      <div class="panel-title">${esc(a.name)} · cycle ${esc(String(a.cycle_id || "").slice(0, 16))}</div>
+      <div class="chips" style="margin:0 0 14px">
+        <span class="tag">baseline ${esc(String(a.baseline_hash).slice(0, 12) || "—")}</span>
+        <span class="tag">trace ${esc(String(a.trace_hash).slice(0, 12) || "—")}</span>
+        ${a.resource_hash ? `<span class="tag violet">resource ${esc(String(a.resource_hash).slice(0, 12))}</span>` : ""}
+      </div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Artifact</th><th>Size</th><th></th></tr></thead>
+          <tbody>
+            ${a.artifacts.map(f => `<tr tabindex="0" role="button" data-rel="${esc(f.rel)}">
+              <td class="mono">${esc(f.name)}</td>
+              <td class="mono dim">${num(f.size)} B</td>
+              <td class="dim">open →</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`).join(""));
+  if (changed) list.querySelectorAll("tr[data-rel]").forEach(tr =>
+    tr.addEventListener("click", () => openArtifact(tr.dataset.rel)));
+}
+
+function renderStaleness(agents) {
+  const schedule = {7: 6, 6: 12, 5: 24, 4: 48, 3: 96, 2: 168, 1: 336};
+  setHTML($("#staleness-track"), Object.entries(schedule).reverse().map(([prio, hours]) => {
+    const here = agents.filter(a => a.priority === Number(prio));
+    return `<div class="stage-pill${here.some(a => a.due) ? " hot" : ""}">
+      <div class="sn">priority ${prio}</div>
+      <div class="sv">${hours}h</div>
+      <div class="sx">${esc(here.map(a => a.id).join(", ") || "—")}</div>
+    </div>`;
+  }).join(""));
+}
+
+function renderJobs(jobs) {
+  const tb = $("#job-tbody");
+  if (!jobs.length) {
+    setHTML(tb, `<tr><td colspan="6" class="dim" style="text-align:center">NO RUNS RECORDED YET</td></tr>`);
+    return;
+  }
+  setHTML(tb, jobs.map(j => {
+    const r = j.result || {};
+    const detail = j.error
+      || (j.phase === "narrative"
+          ? (r.chars ? `${r.chars} chars` : (j.progress?.note || "—"))
+          : (r.ran ? `ran ${r.ran.length} · skipped ${(r.skipped||[]).length}` : (j.progress?.note || j.progress?.stage || "—")));
+    const cls = j.status === "done" ? "done" : (j.status === "running" ? "running" : "error");
+    return `<tr>
+      <td class="mono">${esc(j.id)}</td>
+      <td class="mono dim">${esc(j.phase)}</td>
+      <td><span class="status-pill st-${cls}">${esc(j.status)}</span></td>
+      <td class="mono dim nowrap">${esc(shortTime(j.started_at))}</td>
+      <td class="mono dim nowrap">${esc(j.finished_at ? shortTime(j.finished_at) : "—")}</td>
+      <td class="dim">${esc(detail)}</td>
+    </tr>`;
+  }).join(""));
+}
+
+function renderAgentPicker(agents) {
+  const sel = $("#f-agent");
+  const current = sel.value;
+  // setHTML matters here: rebuilding the options every poll would close the
+  // dropdown while the operator has it open.
+  const changed = setHTML(sel, agents.map(a =>
+    `<option value="${esc(a.id)}">${esc(a.name)} (${esc(a.id)})</option>`).join(""));
+  if (changed && current && agents.some(a => a.id === current)) sel.value = current;
+}
+
+function renderLLM(llm) {
+  LLM = llm;
+  const badge = $("#badge-llm");
+  const line = $("#llm-status");
+  if (!llm.enabled) {
+    badge.textContent = "LLM OFF";
+    badge.className = "badge off hide-sm";
+    line.innerHTML = `<span style="color:var(--faint)">●</span> advisory LLM disabled — `
+      + `set <code class="inline">DRIFTLAB_LLM_PROVIDER=omlx</code> to enable narratives. `
+      + `Compliance is unaffected: verdicts never use a model.`;
+    $("#f-narrative").disabled = true;
+  } else if (llm.reachable) {
+    badge.textContent = "OMLX ●";
+    badge.className = "badge ok hide-sm";
+    line.innerHTML = `<span style="color:var(--green)">●</span> ${esc(llm.provider)} reachable at `
+      + `${esc(llm.base_url)} · model <code class="inline">${esc(llm.model)}</code>`
+      + (llm.detail ? ` <span style="color:var(--amber)">— ${esc(llm.detail)}</span>` : "");
+    $("#f-narrative").disabled = false;
+  } else {
+    badge.textContent = "OMLX ✕";
+    badge.className = "badge warn hide-sm";
+    line.innerHTML = `<span style="color:var(--amber)">●</span> ${esc(llm.provider)} offline at `
+      + `${esc(llm.base_url)}${llm.detail ? " — " + esc(llm.detail) : ""}`;
+    $("#f-narrative").disabled = false;
+  }
+}
+
+function renderAbout(snap) {
+  $("#about-runtime").innerHTML = [
+    `registry ${esc(snap.registry)}`,
+    `data dir ${esc(snap.data_dir)}`,
+    `snapshot ${esc(snap.generated_at)}`,
+    `advisory backend ${esc(LLM ? LLM.provider : "—")}`,
+  ].join("<br>");
+}
+
+/* ── modals ── */
+// Every open/close bumps MODAL_SEQ. Async work started for one modal (a
+// narrative generation, an artifact fetch) captures the sequence and drops its
+// result if the operator has since closed or switched modals — otherwise one
+// agent's narrative lands in another agent's panel.
+let MODAL_SEQ = 0;
+let MODAL_RETURN_FOCUS = null;
+
+function openModal(html) {
+  MODAL_SEQ++;
+  MODAL_RETURN_FOCUS = document.activeElement;
+  $("#modal-body").innerHTML = html;
+  $("#modal-overlay").classList.add("open");
+  $("#modal-close").focus();
+  return MODAL_SEQ;
+}
+function closeModal() {
+  MODAL_SEQ++;
+  $("#modal-overlay").classList.remove("open");
+  if (MODAL_RETURN_FOCUS && MODAL_RETURN_FOCUS.focus) MODAL_RETURN_FOCUS.focus();
+  MODAL_RETURN_FOCUS = null;
+}
+$("#modal-close").onclick = closeModal;
+$("#modal-overlay").addEventListener("click", e => {
+  if (e.target.id === "modal-overlay") closeModal();
+});
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("#modal-overlay").classList.contains("open")) closeModal();
+});
+// Rows and cards are divs/trs, so they are not natively focusable. They carry
+// tabindex + role in their markup; this makes Enter and Space activate them.
+addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = document.activeElement;
+  if (el && el.dataset && ("agent" in el.dataset || "control" in el.dataset
+      || "idx" in el.dataset || "rel" in el.dataset)) {
+    e.preventDefault();
+    el.click();
+  }
+});
+
+async function openAgent(id) {
+  let a;
+  try { a = await api("/api/agent?id=" + encodeURIComponent(id)); }
+  catch (e) { openModal(`<h2>${esc(id)}</h2><div class="note">${esc(e.message)}</div>`); return; }
+  const sevRows = SEVERITIES
+    .filter(s => a.severities[s])
+    .map(s => `<span class="status-pill sev-${s}">${s} ${a.severities[s]}</span>`).join(" ") || "—";
+  const nar = await api("/api/narrative?agent=" + encodeURIComponent(id)).catch(() => ({status: "none"}));
+  const seq = openModal(`
+    <h2>${esc(a.name)}</h2>
+    <div class="chips" style="margin-top:10px">
+      <span class="status-pill st-${a.score == null ? "pending" : (band(a.score) === "ok" ? "ok" : "error")}">${a.score == null ? "unchecked" : a.score + "/100"}</span>
+      <span class="tag">priority ${a.priority}</span>
+      <span class="tag dim">${esc(a.owner || "unowned")}</span>
+      ${a.due ? '<span class="tag amber">due for check</span>' : ""}
+    </div>
+    <div class="m-grid">
+      <div class="m-field"><div class="f-label">Cycle</div><div class="f-value" style="font-family:var(--mono);font-size:11px">${esc(a.cycle_id || "—")}</div></div>
+      <div class="m-field"><div class="f-label">Baseline hash</div><div class="f-value" style="font-family:var(--mono);font-size:11px">${esc(String(a.baseline_hash).slice(0,24) || "—")}</div></div>
+      <div class="m-field"><div class="f-label">Trace hash</div><div class="f-value" style="font-family:var(--mono);font-size:11px">${esc(String(a.trace_hash).slice(0,24) || "—")}</div></div>
+      <div class="m-field"><div class="f-label">Last cycle</div><div class="f-value">${esc(shortTime(a.last_cycle))}<br><span style="color:var(--faint)">${esc(ago(a.age_hours))}</span></div></div>
+      <div class="m-field"><div class="f-label">Check interval</div><div class="f-value">${a.interval_hours}h (priority ${a.priority})</div></div>
+      <div class="m-field"><div class="f-label">Cycles recorded</div><div class="f-value">${a.cycles}</div></div>
+    </div>
+    <div class="m-section"><div class="s-label">Severity breakdown (active)</div>
+      <div class="s-body chips">${sevRows}</div></div>
+    <div class="m-section"><div class="s-label">Controls breached</div>
+      <div class="s-body">${esc(a.controls_violated.join(", ") || "None — every certified control satisfied this cycle.")}</div></div>
+    ${a.resource ? `<div class="m-section"><div class="s-label">Resource budget (DL-8)</div>
+      <div class="s-body">${a.resource.records} records · breaker ${a.resource.breaker_fired ? "fired" : "quiet"} ·
+      fidelity ${esc((a.resource.fidelity_observed || []).join(", ") || "—")}</div></div>` : ""}
+    <div class="m-section"><div class="s-label">Advisory narrative</div>
+      <div class="s-body" id="nar-body">${nar.status === "done"
+        ? esc(nar.text) + `<div style="color:var(--faint);font-size:11px;margin-top:8px">generated by ${esc(nar.model || "local model")} — advisory only, no bearing on the score</div>`
+        : (nar.status === "running" ? '<span class="spinner"></span> generating…'
+          : (nar.status === "error" ? `<span style="color:var(--red)">${esc(nar.error)}</span>`
+            : '<span style="color:var(--faint)">Not generated.</span>'))}
+      </div>
+      <div style="margin-top:12px"><button class="btn sm ghost" id="nar-btn">ASK LOCAL MODEL</button></div>
+    </div>
+    <div class="m-section"><div class="s-label">Score history</div>
+      <div class="s-body" style="font-family:var(--mono);font-size:11px">
+        ${a.history.map(h => `${esc(shortTime(h.created_at))} — ${h.score}/100`).join("<br>") || "—"}
+      </div></div>`);
+  const btn = $("#nar-btn");
+  if (btn) btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    $("#nar-body").innerHTML = '<span class="spinner"></span> asking the local model…';
+    try {
+      await api("/api/narrative", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({agent: id}),
+      });
+      pollNarrative(id, seq);
+    } catch (e) {
+      $("#nar-body").innerHTML = `<span style="color:var(--red)">${esc(e.message)}</span>`;
+      btn.disabled = false;
+    }
+  });
+}
+
+async function pollNarrative(agent, seq) {
+  // A narrative takes minutes. If the operator closed this modal or opened a
+  // different agent meanwhile, drop the result rather than painting agent A's
+  // narrative into agent B's panel.
+  if (seq !== MODAL_SEQ) return;
+  const nar = await api("/api/narrative?agent=" + encodeURIComponent(agent)).catch(() => null);
+  if (!nar || seq !== MODAL_SEQ) return;
+  const body = $("#nar-body");
+  if (!body) return;
+  if (nar.status === "running") { setTimeout(() => pollNarrative(agent, seq), 1500); return; }
+  if (nar.status === "done") {
+    body.innerHTML = esc(nar.text)
+      + `<div style="color:var(--faint);font-size:11px;margin-top:8px">generated by ${esc(nar.model || "local model")} — advisory only, no bearing on the score</div>`;
+  } else {
+    body.innerHTML = `<span style="color:var(--red)">${esc(nar.error || "generation failed")}</span>`;
+  }
+  const btn = $("#nar-btn");
+  if (btn) btn.disabled = false;
+}
+
+function openFinding(f) {
+  if (!f) return;
+  const probe = f.probe || {};
+  openModal(`
+    <h2>${esc(f.title)}</h2>
+    <div class="chips" style="margin-top:10px">
+      <span class="status-pill sev-${esc(f.severity)}">${esc(f.severity)}</span>
+      <span class="tag">${esc(f.control)}</span>
+      <span class="tag dim">${esc(f.agent)}</span>
+      <span class="status-pill vd-${esc(String(f.verdict).replace("_","-"))}">${esc(f.verdict)}</span>
+      ${f.waived ? '<span class="tag amber">waived</span>' : ""}
+      ${f.extra && f.extra.dl5_escalated ? '<span class="tag red">DL-5 escalated</span>' : ""}
+    </div>
+    <div class="m-grid">
+      <div class="m-field"><div class="f-label">Score impact</div><div class="f-value">${f.waived ? "0 (waived)" : "−" + f.weight}</div></div>
+      <div class="m-field"><div class="f-label">Evidence events</div><div class="f-value">${(f.evidence||[]).length}</div></div>
+      <div class="m-field"><div class="f-label">Fingerprint</div><div class="f-value" style="font-family:var(--mono);font-size:11px">${esc(String(f.fingerprint).slice(0,20))}</div></div>
+    </div>
+    <div class="m-section"><div class="s-label">Detail</div><div class="s-body">${esc(f.detail)}</div></div>
+    ${f.waiver_reason ? `<div class="m-section"><div class="s-label">Waiver reason</div><div class="s-body">${esc(f.waiver_reason)}</div></div>` : ""}
+    <div class="m-section"><div class="s-label">Proof-engine verdict</div>
+      <div class="s-body">${esc(f.rationale || "No experiment was run for this finding (INFO and LOW severities are not probed).")}</div></div>
+    ${probe.kind ? `<div class="m-section"><div class="s-label">Probe</div>
+      <div class="s-body">kind <b>${esc(probe.kind)}</b> · ${num(probe.samples)} samples · ${num(probe.violations)} violations<br>${esc(probe.detail || "")}</div></div>` : ""}
+    <div class="m-section"><div class="s-label">Derived-from evidence ids</div>
+      <pre class="code">${esc((f.evidence || []).join("\n") || "— (this control fires on an absence, so it cites no single event)")}</pre></div>
+    ${Object.keys(f.extra || {}).length ? `<div class="m-section"><div class="s-label">Parameters</div>
+      <pre class="code">${esc(JSON.stringify(f.extra, null, 2))}</pre></div>` : ""}`);
+}
+
+function openControl(id) {
+  const c = (SNAP.controls || []).find(x => x.id === id);
+  if (!c) return;
+  const hits = (SNAP.findings || []).filter(f => f.control === id && !f.waived);
+  openModal(`
+    <h2>${esc(c.id)} — ${esc(c.title)}</h2>
+    <div class="chips" style="margin-top:10px">
+      <span class="status-pill st-${esc(c.status)}">${esc(c.status)}</span>
+      ${c.is_ca7 ? '<span class="tag violet">CA-7 continuous monitoring</span>' : ""}
+      ${c.nist_800_53.map(n => `<span class="tag dim">${esc(n)}</span>`).join("")}
+    </div>
+    <div class="m-grid">
+      <div class="m-field"><div class="f-label">Findings</div><div class="f-value">${c.findings}</div></div>
+      <div class="m-field"><div class="f-label">Proven</div><div class="f-value">${c.confirmed}</div></div>
+      <div class="m-field"><div class="f-label">Agents assessed</div><div class="f-value">${c.agents_checked}</div></div>
+    </div>
+    <div class="m-section"><div class="s-label">What it certifies</div><div class="s-body">${esc(c.description)}</div></div>
+    <div class="m-section"><div class="s-label">Agents violating</div>
+      <div class="s-body">${esc(c.agents_violating.join(", ") || "None.")}</div></div>
+    <div class="m-section"><div class="s-label">Open findings</div>
+      <div class="s-body">${hits.map(f =>
+        `• <b>${esc(f.agent)}</b> — ${esc(f.title)} <span class="status-pill sev-${esc(f.severity)}">${esc(f.severity)}</span>`
+      ).join("<br>") || "None."}</div></div>`);
+}
+
+function openExperiment(e) {
+  if (!e) return;
+  openModal(`
+    <h2>${esc(e.title || e.control)}</h2>
+    <div class="chips" style="margin-top:10px">
+      <span class="status-pill vd-${esc(e.verdict)}">${esc(e.verdict)}</span>
+      <span class="tag">${esc(e.control)}</span>
+      <span class="tag dim">${esc(e.agent)}</span>
+      ${e.severity ? `<span class="status-pill sev-${esc(e.severity)}">${esc(e.severity)}</span>` : ""}
+    </div>
+    <div class="m-grid">
+      <div class="m-field"><div class="f-label">Probe kind</div><div class="f-value">${esc(e.kind || "—")}</div></div>
+      <div class="m-field"><div class="f-label">Samples</div><div class="f-value">${num(e.samples)}</div></div>
+      <div class="m-field"><div class="f-label">Violations</div><div class="f-value">${num(e.violations)}</div></div>
+    </div>
+    <div class="m-section"><div class="s-label">Verdict rationale</div><div class="s-body">${esc(e.rationale)}</div></div>
+    <div class="m-section"><div class="s-label">Probe detail</div><div class="s-body">${esc(e.detail)}</div></div>
+    <div class="m-section"><div class="s-label">Isolation</div><div class="s-body">
+      The probe ran against an in-memory replay of the recorded trace. The experiment loop
+      never calls the live agent and never reaches the network — that isolation is enforced
+      and tested.</div></div>`);
+}
+
+async function openArtifact(rel) {
+  const seq = openModal(`<h2>${esc(rel.split("/").pop())}</h2><div class="note">${esc(rel)}</div><pre class="code">loading…</pre>`);
+  const paint = (text) => {
+    // Bail if this modal is gone — otherwise a slow artifact read overwrites
+    // whatever the operator opened next.
+    if (seq !== MODAL_SEQ) return;
+    const pre = $("#modal-body").querySelector("pre");
+    if (pre) pre.textContent = text;
+  };
+  try {
+    const r = await fetch("/api/evidence?rel=" + encodeURIComponent(rel));
+    const text = await r.text();
+    if (!r.ok) throw new Error(text);
+    paint(rel.endsWith(".json") ? JSON.stringify(JSON.parse(text), null, 2) : text);
+  } catch (e) {
+    paint("Failed to read artifact: " + e.message);
+  }
+}
+
+/* ── apply ── */
+function applySnapshot(snap, events, jobs, health) {
+  SNAP = snap;
+  JOBS = (jobs && jobs.jobs) || [];
+  BUSY = !!(health && health.busy);
+  const k = snap.kpis;
+
+  renderKPIs(k);
+  renderRing(k);
+  renderAgentScores(snap.agents);
+  renderControlTrack(snap.controls);
+  renderEstate(snap.agents, $("#estate-search").value);
+  renderFindings();
+  renderControls(snap.controls);
+  renderExperiments(snap.experiments);
+  renderResources(snap.resources);
+  renderEvidence(snap.agents);
+  renderStaleness(snap.agents);
+  renderAgentPicker(snap.agents);
+  renderJobs(JOBS);
+  renderAbout(snap);
+  if (events) renderEvents(events.events);
+
+  const scoreBadge = $("#badge-score");
+  scoreBadge.textContent = k.estate_score == null ? "— /100" : k.estate_score + "/100";
+  scoreBadge.className = "badge hide-sm " + ({ok: "ok", warn: "warn", bad: "bad"}[band(k.estate_score)] || "off");
+
+  const badge = $("#badge-status");
+  const dot = $("#live-dot");
+  const runBtn = $("#run-btn");
+  if (BUSY) {
+    badge.textContent = "RUNNING";
+    badge.className = "badge warn";
+    dot.classList.remove("off");
+    const p = JOBS.find(j => j.id === health.active_job_id)?.progress;
+    $("#live-line").innerHTML = `<span class="spinner"></span> ${esc(p?.stage || "running")}`
+      + (p?.agent ? " · " + esc(p.agent) : "") + (p?.note ? " · " + esc(p.note) : "");
+    runBtn.disabled = true;
+    runBtn.textContent = "RUNNING…";
+  } else {
+    const last = JOBS.find(j => j.phase === "cycle");
+    const failed = last && last.status === "error";
+    badge.textContent = failed ? "ERROR" : (k.agents_checked ? "READY" : "IDLE");
+    badge.className = failed ? "badge bad" : (k.agents_checked ? "badge ok" : "badge warn");
+    dot.classList.add("off");
+    if (failed) {
+      $("#live-line").innerHTML = `<span style="color:var(--red)">✗ ${esc(last.error || "cycle failed")}</span>`;
+    } else if (k.agents_checked) {
+      $("#live-line").textContent =
+        `${k.agents_checked}/${k.agents} agents checked · ${k.anomalies_active} active anomalies · `
+        + `${k.confirmed} proven drift${k.confirmed === 1 ? "" : "s"} · snapshot ${shortTime(snap.generated_at)}`;
+    } else {
+      $("#live-line").textContent = "⟳ no cycle yet — run one from Monitor";
+    }
+    runBtn.disabled = false;
+    runBtn.textContent = $("#f-scope").value === "agent" ? "▶ RUN AGENT CHECK" : "▶ RUN ESTATE CYCLE";
+  }
+}
+
+async function poll() {
+  try {
+    const [health, snap, events, jobs] = await Promise.all([
+      api("/api/health"), api("/api/state"), api("/api/events?limit=120"), api("/api/jobs"),
+    ]);
+    applySnapshot(snap, events, jobs, health);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function pollLLM() {
+  try { renderLLM(await api("/api/llm")); } catch (e) { console.warn(e); }
+}
+
+async function startRun() {
+  const body = {
+    scope: $("#f-scope").value,
+    agent: $("#f-agent").value,
+    force: $("#f-force").checked,
+    experiments: $("#f-experiments").checked,
+    narrative: $("#f-narrative").checked && !$("#f-narrative").disabled,
+  };
+  const btn = $("#run-btn");
+  try {
+    btn.disabled = true;
+    await api("/api/run", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body),
+    });
+    go("overview");
+    await poll();
+  } catch (e) {
+    alert(e.message || String(e));
+    btn.disabled = false;
+  }
+}
+
+$("#run-btn").addEventListener("click", startRun);
+$("#f-scope").addEventListener("change", () => {
+  $("#run-btn").textContent = $("#f-scope").value === "agent" ? "▶ RUN AGENT CHECK" : "▶ RUN ESTATE CYCLE";
+});
+$("#estate-search").addEventListener("input", e => SNAP && renderEstate(SNAP.agents, e.target.value));
+$("#find-search").addEventListener("input", renderFindings);
+$("#waived-toggle").addEventListener("click", () => { SHOW_WAIVED = !SHOW_WAIVED; renderFindings(); });
+
+/* ── start ── */
+(function start() {
+  const q = qs();
+  if (q.scope) $("#f-scope").value = q.scope;
+  if (location.hash && $(`[data-view="${location.hash.slice(1)}"]`)) go(location.hash.slice(1));
+  else if (q.view && $(`[data-view="${q.view}"]`)) go(q.view);
+  // Deliberately no ?autostart= parameter: a URL must never be able to start a
+  // compliance cycle. Running one is an explicit click on RUN.
+  poll().then(() => { if (q.agent) $("#f-agent").value = q.agent; });
+  pollLLM();
+  setInterval(poll, 1500);
+  setInterval(pollLLM, 15000);
+})();
+</script>
+</body>
+</html>

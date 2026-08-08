@@ -42,6 +42,9 @@ Nicolas Cravino (sw30labs). Vision extends to v3/v4.
   SQLite store (idempotent).
 - **DoD:** `monitor run --force` scores both agents; dashboard serves estate +
   per-agent; artifacts written per cycle.
+- *Superseded in v2.2:* the FastAPI/Jinja dashboard was replaced by the
+  stdlib-only web command deck (`driftlab serve`), which also retired the
+  fastapi, jinja2 and uvicorn dependencies.
 
 ## Phase 6 — Docs + training + pitch ✅ (this document set)
 - `README.md`, `docs/RUNBOOK.md`, `docs/CERTIFICATION-GUIDE.md`, `docs/PITCH.md`,
@@ -64,11 +67,11 @@ Nicolas Cravino (sw30labs). Vision extends to v3/v4.
 ## v3 — Multi-agent estate (vision)
 - **Cross-agent drift correlation**: detect drifts that only appear when agents
   interact (handoffs, shared tools).
-- **Replay-diff UI**: visual diff of two cycles / two baselines in the dashboard.
+- **Replay-diff UI**: visual diff of two cycles / two baselines in the command deck.
 - **Waiver lifecycle**: expiry enforcement surfaced in the monitor; waiver
   review queue.
 - **DoD:** estate of ≥5 agents with at least one cross-agent correlation finding;
-  dashboard shows replay diff.
+  the deck shows replay diff.
 
 ## v4 — Regulator-ready + managed service (vision)
 - **Evidence packaging**: bundle cycles into audit-ready submissions.

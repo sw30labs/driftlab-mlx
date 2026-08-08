@@ -6,7 +6,7 @@ Commands:
   driftlab monitor run            staleness-weighted estate cycle
   driftlab monitor status         recent runs
   driftlab report <cycle_id>      print a cycle's markdown report
-  driftlab dashboard              serve the estate UI
+  driftlab serve                  serve the web command deck
   driftlab demo                  E2E on the bundled seed estate
 """
 
@@ -157,15 +157,27 @@ def report(cycle_id: str) -> None:
 
 
 @app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8321, "--port"),
+    no_browser: bool = typer.Option(False, "--no-browser",
+                                    help="do not open a browser tab on start"),
+    view: str = typer.Option("", "--view", help="open straight to a deck view"),
+) -> None:
+    """Serve the web command deck (air-gapped, loopback-only; no CDN)."""
+    from .web.server import serve as serve_deck
+    serve_deck(host=host, port=port, open_browser=not no_browser,
+               query=f"view={view}" if view else "")
+
+
+@app.command(hidden=True)
 def dashboard(
     host: str = typer.Option("127.0.0.1", "--host"),
     port: int = typer.Option(8321, "--port"),
 ) -> None:
-    """Serve the estate dashboard (air-gapped; no CDN)."""
-    import uvicorn
-    from .dashboard.app import app as fastapi_app
-    console.print(f"[green]DriftLab dashboard at http://{host}:{port}[/green]")
-    uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
+    """Deprecated alias for `driftlab serve`."""
+    console.print("[yellow]`driftlab dashboard` is now `driftlab serve`[/yellow]")
+    serve(host=host, port=port, no_browser=False, view="")
 
 
 @app.command()

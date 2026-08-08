@@ -15,19 +15,15 @@ dependencies = [
     "rich>=13.0",
     "pyyaml>=6.0,<7.0",
     "sqlalchemy>=2.0,<3.0",
-    "fastapi>=0.110,<1.0",
-    "jinja2>=3.1,<4.0",
-    "uvicorn>=0.29,<1.0",
     "langgraph>=0.4,<2.0",
 ]
 
+# The web command deck and the advisory OMLX client are stdlib-only by design:
+# no server framework, no template engine, no HTTP client, no LLM SDK.
+
 [project.optional-dependencies]
-llm = [
-    "langchain-openai>=0.3,<2.0",
-]
 test = [
     "pytest>=8.0",
-    "httpx>=0.27",
 ]
 
 [project.scripts]

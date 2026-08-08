@@ -77,7 +77,7 @@ OSCAL baseline → Control model (DL-1..8) ─┤
                                         ▼
               Hypothesis → Micro-Experiment Loop (prove/refute)
                                         ▼
-        OSCAL Evidence + Dashboard + Staleness Monitor
+      OSCAL Evidence + Command Deck + Staleness Monitor
 ```
 
 > Note: Emphasize "deterministic" — the LLM is advisory only; it never sets a
@@ -169,8 +169,8 @@ SOC 2 / ISO 42001.
 
 ## Slide 11 — Roadmap
 
-- **v2.0 (now):** deterministic core, 7 controls, proof loop, OSCAL evidence,
-  dashboard, monitor. *Green test suite.*
+- **v2.0 (now):** deterministic core, 8 controls, proof loop, OSCAL evidence,
+  web command deck, monitor. *Green test suite.*
 - **v0.2:** strict OSCAL 1.1.2 conformance validation; EU AI Act text → control
   auto-mapping; OpenTelemetry ingestor.
 - **v3:** multi-agent estate correlation (cross-agent drift), replay-diff UI,
